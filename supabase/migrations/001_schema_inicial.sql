@@ -5,6 +5,7 @@
 -- Extensões necessárias
 CREATE EXTENSION IF NOT EXISTS "uuid-ossp";
 CREATE EXTENSION IF NOT EXISTS "pgcrypto";
+CREATE EXTENSION IF NOT EXISTS "btree_gist"; -- necessário para EXCLUDE com UUID + tstzrange
 
 -- =============================================================
 -- ENUMS
