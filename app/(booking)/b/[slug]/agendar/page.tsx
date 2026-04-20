@@ -25,10 +25,12 @@ export default async function AgendarBPage({ params, searchParams }: Props) {
 
   if (!empresa) notFound()
 
+  // Usa admin client para leitura de catálogo público — RLS bloqueia anon key nessas tabelas
+  const admin = createAdminClient()
   const [{ data: servicos }, { data: barbeiros }, { data: horarios }] = await Promise.all([
-    supabase.from('servicos').select('*').eq('empresa_id', empresa.id).eq('ativo', true).order('nome'),
-    supabase.from('barbeiros').select('*').eq('empresa_id', empresa.id).eq('ativo', true).order('nome'),
-    supabase.from('horarios_funcionamento').select('dia_semana')
+    admin.from('servicos').select('*').eq('empresa_id', empresa.id).eq('ativo', true).order('nome'),
+    admin.from('barbeiros').select('*').eq('empresa_id', empresa.id).eq('ativo', true).order('nome'),
+    admin.from('horarios_funcionamento').select('dia_semana')
       .eq('empresa_id', empresa.id).is('barbeiro_id', null).eq('ativo', true),
   ])
 
@@ -40,7 +42,6 @@ export default async function AgendarBPage({ params, searchParams }: Props) {
   let initialBarbeiro: Barbeiro | undefined
 
   if (reagendar && cliente) {
-    const admin = createAdminClient()
     const { data: ag } = await admin
       .from('agendamentos')
       .select('id, servico_id, barbeiro_id')
