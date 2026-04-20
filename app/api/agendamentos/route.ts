@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
+import { createAdminClient } from '@/lib/supabase/admin'
 import { verificarConflito, calcularFim } from '@/lib/agendamento/slots'
 import { CriarAgendamentoSchema } from '@/lib/validations/agendamento'
 import { verificarLimiteAgendamento, tratarErroBanco } from '@/lib/planos'
@@ -45,11 +46,32 @@ export async function GET(req: NextRequest) {
   return NextResponse.json({ agendamentos }, { status: 200 })
 }
 
+// Mapa simples para Rate Limiting na instância Serverless
+const rateLimit = new Map<string, { count: number; resetAt: number }>()
+
 // ─────────────────────────────────────────────────────────────────────────────
 // POST /api/agendamentos
 // Rota pública — cliente cria agendamento sem estar logado
 // ─────────────────────────────────────────────────────────────────────────────
 export async function POST(req: NextRequest) {
+  // 1. Rate Limiting Básico por IP
+  const ip = req.headers.get('x-forwarded-for') ?? 'anonymous'
+  if (ip !== 'anonymous') {
+    const limits = rateLimit.get(ip)
+    const now = Date.now()
+    if (limits && limits.resetAt > now) {
+      if (limits.count >= 5) {
+        return NextResponse.json(
+          { erro: 'Muitos agendamentos na mesma hora. Tente novamente mais tarde.' },
+          { status: 429, headers: { 'Retry-After': '900' } }
+        )
+      }
+      limits.count++
+    } else {
+      rateLimit.set(ip, { count: 1, resetAt: now + 15 * 60 * 1000 }) // 15 minutos
+    }
+  }
+
   const body = await req.json().catch(() => null)
   if (!body) {
     return NextResponse.json({ erro: 'Body inválido' }, { status: 400 })
@@ -113,7 +135,8 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. upsert do cliente por telefone + empresa (evita duplicatas)
-  const { data: cliente, error: erroCliente } = await supabase
+  const supabaseAdmin = createAdminClient()
+  const { data: cliente, error: erroCliente } = await supabaseAdmin
     .from('clientes')
     .upsert(
       {

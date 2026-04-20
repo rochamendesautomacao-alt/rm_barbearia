@@ -1,6 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import CardAgendamento from '@/components/dashboard/CardAgendamento'
 import NavegacaoDia from '@/components/dashboard/NavegacaoDia'
+import type { AgendamentoDia } from '@/types/database'
 
 interface Props {
   searchParams: Promise<{ data?: string }>
@@ -17,11 +18,11 @@ function formatarDataExibicao(dataStr: string) {
   })
 }
 
-function calcularTotais(agendamentos: any[]) {
-  const ativos = agendamentos.filter(a => !['cancelado', 'no_show'].includes(a.status))
+function calcularTotais(agendamentos: AgendamentoDia[]) {
+  const ativos  = agendamentos.filter(a => !['cancelado', 'no_show'].includes(a.status))
   const receita = agendamentos
     .filter(a => a.status === 'concluido')
-    .reduce((s, a) => s + a.preco_cobrado, 0)
+    .reduce((s, a) => s + (a.preco_cobrado ?? 0), 0)
   return { total: ativos.length, receita }
 }
 
@@ -31,35 +32,35 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  const { data: agendamentos } = await supabase
+  const { data: raw } = await supabase
     .from('vw_agenda_dia')
     .select('*')
-    .gte('data_hora_inicio' as never, `${data}T00:00:00`)
-    .lte('data_hora_inicio' as never, `${data}T23:59:59`)
-    .order('data_hora_inicio' as never, { ascending: true })
 
-  const lista   = agendamentos ?? []
+  const lista = ((raw ?? []) as AgendamentoDia[]).filter(a => {
+    const d = a.data_hora_inicio?.split('T')[0]
+    return d === data
+  }).sort((a, b) =>
+    new Date(a.data_hora_inicio).getTime() - new Date(b.data_hora_inicio).getTime()
+  )
+
   const totais  = calcularTotais(lista)
   const receita = totais.receita.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' })
 
-  const pendentes    = lista.filter(a => a.status === 'pendente')
-  const confirmados  = lista.filter(a => a.status === 'confirmado')
-  const andamento    = lista.filter(a => a.status === 'em_andamento')
-  const concluidos   = lista.filter(a => a.status === 'concluido')
-  const cancelados   = lista.filter(a => ['cancelado', 'no_show'].includes(a.status))
+  const pendentes   = lista.filter(a => a.status === 'pendente')
+  const confirmados = lista.filter(a => a.status === 'confirmado')
+  const andamento   = lista.filter(a => a.status === 'em_andamento')
+  const concluidos  = lista.filter(a => a.status === 'concluido')
+  const cancelados  = lista.filter(a => ['cancelado', 'no_show'].includes(a.status))
 
   return (
     <div className="px-4 py-6 space-y-5 max-w-2xl">
-      {/* Header */}
       <div>
         <h1 className="text-white text-xl font-bold">Agenda</h1>
         <p className="text-zinc-400 text-sm capitalize">{formatarDataExibicao(data)}</p>
       </div>
 
-      {/* Navegação de dia */}
       <NavegacaoDia dataAtual={data} />
 
-      {/* Resumo do dia */}
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
           <p className="text-zinc-400 text-xs">Agendamentos</p>
@@ -71,42 +72,31 @@ export default async function AgendaPage({ searchParams }: Props) {
         </div>
       </div>
 
-      {/* Lista de agendamentos por grupo */}
       {lista.length === 0 ? (
         <div className="text-center py-16">
           <p className="text-zinc-500 text-sm">Nenhum agendamento para este dia.</p>
         </div>
       ) : (
         <div className="space-y-5">
-          {andamento.length > 0 && (
-            <Grupo titulo="Em andamento" items={andamento} />
-          )}
-          {pendentes.length > 0 && (
-            <Grupo titulo="Pendentes" items={pendentes} />
-          )}
-          {confirmados.length > 0 && (
-            <Grupo titulo="Confirmados" items={confirmados} />
-          )}
-          {concluidos.length > 0 && (
-            <Grupo titulo="Concluídos" items={concluidos} />
-          )}
-          {cancelados.length > 0 && (
-            <Grupo titulo="Cancelados / No-show" items={cancelados} />
-          )}
+          {andamento.length > 0  && <Grupo titulo="Em andamento"        items={andamento} />}
+          {pendentes.length > 0  && <Grupo titulo="Pendentes"           items={pendentes} />}
+          {confirmados.length > 0 && <Grupo titulo="Confirmados"        items={confirmados} />}
+          {concluidos.length > 0 && <Grupo titulo="Concluídos"          items={concluidos} />}
+          {cancelados.length > 0 && <Grupo titulo="Cancelados / No-show" items={cancelados} />}
         </div>
       )}
     </div>
   )
 }
 
-function Grupo({ titulo, items }: { titulo: string; items: any[] }) {
+function Grupo({ titulo, items }: { titulo: string; items: AgendamentoDia[] }) {
   return (
     <div className="space-y-2">
       <h2 className="text-zinc-500 text-xs font-medium uppercase tracking-wide px-1">
         {titulo} <span className="text-zinc-600">({items.length})</span>
       </h2>
       {items.map(ag => (
-        <CardAgendamento key={ag.id} agendamento={ag} />
+        <CardAgendamento key={ag.id} agendamento={ag as any} />
       ))}
     </div>
   )

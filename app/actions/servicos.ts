@@ -16,7 +16,7 @@ async function getEmpresaId() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Não autenticado')
 
-  const { data } = await supabase
+  const { data }: { data: any } = await supabase
     .from('usuarios')
     .select('empresa_id')
     .eq('id', user.id)
@@ -37,8 +37,8 @@ export async function criarServico(formData: FormData) {
 
   const { supabase, empresa_id } = await getEmpresaId()
 
-  const { error } = await supabase
-    .from('servicos')
+  const { error } = await (supabase
+    .from('servicos') as any)
     .insert({ ...parsed.data, empresa_id })
 
   if (error) return { erro: error.message }
@@ -58,8 +58,8 @@ export async function editarServico(id: string, formData: FormData) {
 
   const { supabase } = await getEmpresaId()
 
-  const { error } = await supabase
-    .from('servicos')
+  const { error } = await (supabase
+    .from('servicos') as any)
     .update(parsed.data)
     .eq('id', id)
 
@@ -72,8 +72,8 @@ export async function editarServico(id: string, formData: FormData) {
 export async function toggleServico(id: string, ativo: boolean) {
   const { supabase } = await getEmpresaId()
 
-  const { error } = await supabase
-    .from('servicos')
+  const { error } = await (supabase
+    .from('servicos') as any)
     .update({ ativo })
     .eq('id', id)
 

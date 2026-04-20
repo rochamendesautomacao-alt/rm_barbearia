@@ -11,6 +11,7 @@ build/
 # env — NUNCA commitar
 .env
 .env.local
+.env.vercel
 .env.development.local
 .env.test.local
 .env.production.local
@@ -28,3 +29,5 @@ next-env.d.ts
 # OS
 .DS_Store
 Thumbs.db
+
+.vercel

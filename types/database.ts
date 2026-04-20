@@ -23,8 +23,37 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Empresas['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Empresas['Insert']>
+        Insert: {
+          id?: string
+          nome: string
+          slug: string
+          email?: string | null
+          telefone?: string | null
+          endereco?: string | null
+          cidade?: string | null
+          estado?: string | null
+          logo_url?: string | null
+          cor_primaria?: string
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          slug?: string
+          email?: string | null
+          telefone?: string | null
+          endereco?: string | null
+          cidade?: string | null
+          estado?: string | null
+          logo_url?: string | null
+          cor_primaria?: string
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       usuarios: {
         Row: {
@@ -37,8 +66,27 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Usuarios['Row'], 'created_at' | 'updated_at'>
-        Update: Partial<Usuarios['Insert']>
+        Insert: {
+          id: string
+          empresa_id: string
+          nome: string
+          email: string
+          role?: RoleUsuario
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          nome?: string
+          email?: string
+          role?: RoleUsuario
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       barbeiros: {
         Row: {
@@ -53,8 +101,31 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Barbeiros['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Barbeiros['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          usuario_id?: string | null
+          nome: string
+          foto_url?: string | null
+          bio?: string | null
+          telefone?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          usuario_id?: string | null
+          nome?: string
+          foto_url?: string | null
+          bio?: string | null
+          telefone?: string | null
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       servicos: {
         Row: {
@@ -68,8 +139,29 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Servicos['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Servicos['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          nome: string
+          descricao?: string | null
+          duracao_minutos: number
+          preco: number
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          nome?: string
+          descricao?: string | null
+          duracao_minutos?: number
+          preco?: number
+          ativo?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       clientes: {
         Row: {
@@ -82,8 +174,27 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Clientes['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Clientes['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          nome: string
+          telefone: string
+          email?: string | null
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          nome?: string
+          telefone?: string
+          email?: string | null
+          observacoes?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       agendamentos: {
         Row: {
@@ -102,8 +213,39 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Agendamentos['Row'], 'id' | 'data_hora_fim' | 'created_at' | 'updated_at'>
-        Update: Partial<Agendamentos['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          cliente_id: string
+          barbeiro_id: string
+          servico_id: string
+          data_hora_inicio: string
+          data_hora_fim?: string
+          status?: StatusAgendamento
+          preco_cobrado: number
+          observacoes?: string | null
+          cancelado_em?: string | null
+          cancelado_motivo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          cliente_id?: string
+          barbeiro_id?: string
+          servico_id?: string
+          data_hora_inicio?: string
+          data_hora_fim?: string
+          status?: StatusAgendamento
+          preco_cobrado?: number
+          observacoes?: string | null
+          cancelado_em?: string | null
+          cancelado_motivo?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       planos: {
         Row: {
@@ -116,8 +258,27 @@ export interface Database {
           ativo: boolean
           created_at: string
         }
-        Insert: Omit<Planos['Row'], 'id' | 'created_at'>
-        Update: Partial<Planos['Insert']>
+        Insert: {
+          id?: string
+          nome: string
+          preco_mensal: number
+          max_barbeiros: number
+          max_agendamentos_mes: number
+          recursos?: Json
+          ativo?: boolean
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          nome?: string
+          preco_mensal?: number
+          max_barbeiros?: number
+          max_agendamentos_mes?: number
+          recursos?: Json
+          ativo?: boolean
+          created_at?: string
+        }
+        Relationships: []
       }
       assinaturas: {
         Row: {
@@ -132,8 +293,31 @@ export interface Database {
           created_at: string
           updated_at: string
         }
-        Insert: Omit<Assinaturas['Row'], 'id' | 'created_at' | 'updated_at'>
-        Update: Partial<Assinaturas['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          plano_id: string
+          status?: StatusAssinatura
+          data_inicio: string
+          data_fim?: string | null
+          stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          plano_id?: string
+          status?: StatusAssinatura
+          data_inicio?: string
+          data_fim?: string | null
+          stripe_subscription_id?: string | null
+          stripe_customer_id?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
       }
       horarios_funcionamento: {
         Row: {
@@ -145,8 +329,55 @@ export interface Database {
           hora_fim: string
           ativo: boolean
         }
-        Insert: Omit<HorariosFuncionamento['Row'], 'id'>
-        Update: Partial<HorariosFuncionamento['Insert']>
+        Insert: {
+          id?: string
+          empresa_id: string
+          barbeiro_id?: string | null
+          dia_semana: string
+          hora_inicio: string
+          hora_fim: string
+          ativo?: boolean
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          barbeiro_id?: string | null
+          dia_semana?: string
+          hora_inicio?: string
+          hora_fim?: string
+          ativo?: boolean
+        }
+        Relationships: []
+      }
+      horarios_bloqueados: {
+        Row: {
+          id: string
+          empresa_id: string
+          barbeiro_id: string | null
+          data_inicio: string
+          data_fim: string
+          motivo: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          empresa_id: string
+          barbeiro_id?: string | null
+          data_inicio: string
+          data_fim: string
+          motivo?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          empresa_id?: string
+          barbeiro_id?: string | null
+          data_inicio?: string
+          data_fim?: string
+          motivo?: string | null
+          created_at?: string
+        }
+        Relationships: []
       }
     }
     Views: {
@@ -165,6 +396,7 @@ export interface Database {
           servico_nome: string
           duracao_minutos: number
         }
+        Relationships: []
       }
     }
     Functions: {
@@ -179,27 +411,21 @@ export interface Database {
         Returns: { hora_inicio: string; hora_fim: string; disponivel: boolean }[]
       }
     }
+    Enums: {
+      role_usuario: RoleUsuario
+      status_agendamento: StatusAgendamento
+      status_assinatura: StatusAssinatura
+    }
   }
 }
 
-// Atalhos de tipo usados no app
-type Tables = Database['public']['Tables']
-type Empresas = Tables['empresas']
-type Usuarios = Tables['usuarios']
-type Barbeiros = Tables['barbeiros']
-type Servicos = Tables['servicos']
-type Clientes = Tables['clientes']
-type Agendamentos = Tables['agendamentos']
-type Planos = Tables['planos']
-type Assinaturas = Tables['assinaturas']
-type HorariosFuncionamento = Tables['horarios_funcionamento']
-
-export type Empresa = Empresas['Row']
-export type Usuario = Usuarios['Row']
-export type Barbeiro = Barbeiros['Row']
-export type Servico = Servicos['Row']
-export type Cliente = Clientes['Row']
-export type Agendamento = Agendamentos['Row']
-export type Plano = Planos['Row']
-export type Assinatura = Assinaturas['Row']
+// Convenience type aliases
+export type Empresa = Database['public']['Tables']['empresas']['Row']
+export type Usuario = Database['public']['Tables']['usuarios']['Row']
+export type Barbeiro = Database['public']['Tables']['barbeiros']['Row']
+export type Servico = Database['public']['Tables']['servicos']['Row']
+export type Cliente = Database['public']['Tables']['clientes']['Row']
+export type Agendamento = Database['public']['Tables']['agendamentos']['Row']
+export type Plano = Database['public']['Tables']['planos']['Row']
+export type Assinatura = Database['public']['Tables']['assinaturas']['Row']
 export type AgendamentoDia = Database['public']['Views']['vw_agenda_dia']['Row']

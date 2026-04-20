@@ -16,7 +16,7 @@ async function getEmpresaId() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) throw new Error('Não autenticado')
 
-  const { data } = await supabase
+  const { data }: { data: any } = await supabase
     .from('usuarios')
     .select('empresa_id')
     .eq('id', user.id)
@@ -40,8 +40,8 @@ export async function criarBarbeiro(formData: FormData) {
   const limite = await verificarLimiteBarbeiro(empresa_id)
   if (!limite.permitido) return { erro: limite.motivo }
 
-  const { error } = await supabase
-    .from('barbeiros')
+  const { error } = await (supabase
+    .from('barbeiros') as any)
     .insert({ ...parsed.data, empresa_id })
 
   if (error) {
@@ -63,8 +63,8 @@ export async function editarBarbeiro(id: string, formData: FormData) {
 
   const { supabase } = await getEmpresaId()
 
-  const { error } = await supabase
-    .from('barbeiros')
+  const { error } = await (supabase
+    .from('barbeiros') as any)
     .update(parsed.data)
     .eq('id', id)
 
@@ -77,8 +77,8 @@ export async function editarBarbeiro(id: string, formData: FormData) {
 export async function toggleBarbeiro(id: string, ativo: boolean) {
   const { supabase } = await getEmpresaId()
 
-  const { error } = await supabase
-    .from('barbeiros')
+  const { error } = await (supabase
+    .from('barbeiros') as any)
     .update({ ativo })
     .eq('id', id)
 

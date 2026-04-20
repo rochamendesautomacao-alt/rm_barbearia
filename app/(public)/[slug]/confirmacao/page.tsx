@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import type { AgendamentoDia } from '@/types/database'
 
 interface Props {
   params:       Promise<{ slug: string }>
@@ -32,11 +33,8 @@ export default async function ConfirmacaoPage({ params, searchParams }: Props) {
 
   const supabase = await createClient()
 
-  const { data: agendamento } = await supabase
-    .from('vw_agenda_dia')
-    .select('*')
-    .eq('id' as never, id)
-    .single()
+  const { data: todos } = await supabase.from('vw_agenda_dia').select('*')
+  const agendamento = ((todos ?? []) as AgendamentoDia[]).find(a => a.id === id)
 
   if (!agendamento) notFound()
 

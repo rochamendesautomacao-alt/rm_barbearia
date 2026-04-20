@@ -1,10 +1,7 @@
 import { createClient } from '@supabase/supabase-js'
-import type { Database } from '@/types/database'
 
-// Usa service_role — bypass total de RLS
-// NUNCA expor no browser. Usar apenas em Server Actions / Route Handlers confiáveis.
 export function createAdminClient() {
-  return createClient<Database>(
+  return createClient<any>(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!,
     { auth: { autoRefreshToken: false, persistSession: false } }

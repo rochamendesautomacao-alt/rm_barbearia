@@ -19,6 +19,7 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
 
   const [ano, setAno]   = useState(hoje.getFullYear())
   const [mes, setMes]   = useState(hoje.getMonth())
+  const [dataSelecionada, setDataSelecionada] = useState<string | null>(null)
 
   const primeiroDia  = new Date(ano, mes, 1).getDay()   // 0=Dom
   const diasNoMes    = new Date(ano, mes + 1, 0).getDate()
@@ -30,11 +31,13 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
   function mesAnterior() {
     if (mes === 0) { setAno(a => a - 1); setMes(11) }
     else setMes(m => m - 1)
+    setDataSelecionada(null)
   }
 
   function proximoMes() {
     if (mes === 11) { setAno(a => a + 1); setMes(0) }
     else setMes(m => m + 1)
+    setDataSelecionada(null)
   }
 
   function isDiaPassado(dia: number) {
@@ -52,10 +55,13 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
     return dow === 0 || dow === 6
   }
 
+  function toDataStr(dia: number) {
+    return `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
+  }
+
   function handleDia(dia: number) {
-    if (isDiaPassado(dia) || isFuturoLonge(dia)) return
-    const dataStr = `${ano}-${String(mes + 1).padStart(2, '0')}-${String(dia).padStart(2, '0')}`
-    onSelecionar(dataStr)
+    if (isDiaPassado(dia) || isFuturoLonge(dia) || isFimDeSemana(dia)) return
+    setDataSelecionada(toDataStr(dia))
   }
 
   // verifica se o mês anterior está totalmente no passado
@@ -125,6 +131,8 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
             const futuroLong = isFuturoLonge(dia)
             const fds        = isFimDeSemana(dia)
             const desabilitado = passado || futuroLong || fds
+            const dataStr = toDataStr(dia)
+            const selecionado = dataSelecionada === dataStr
 
             return (
               <button
@@ -135,7 +143,9 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
                   'h-9 w-full rounded-lg text-sm font-medium transition-all',
                   desabilitado
                     ? 'text-zinc-700 cursor-not-allowed'
-                    : 'text-white hover:bg-amber-500 hover:text-black active:scale-95',
+                    : selecionado
+                    ? 'bg-amber-500 text-black'
+                    : 'text-white hover:bg-amber-500/20 hover:text-amber-400 active:scale-95',
                 ].join(' ')}
               >
                 {dia}
@@ -150,8 +160,17 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
       </p>
 
       <button
+        onClick={() => { if (dataSelecionada) onSelecionar(dataSelecionada) }}
+        disabled={!dataSelecionada}
+        className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600
+                   text-black font-semibold rounded-xl py-4 text-sm transition-all"
+      >
+        {dataSelecionada ? 'Avançar' : 'Selecione uma data'}
+      </button>
+
+      <button
         onClick={onVoltar}
-        className="w-full py-3 text-zinc-400 hover:text-white text-sm transition-colors"
+        className="w-full py-2 text-zinc-400 hover:text-white text-sm transition-colors"
       >
         ← Voltar
       </button>

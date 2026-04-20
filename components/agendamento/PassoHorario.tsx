@@ -30,13 +30,15 @@ function formatarDataExibicao(dataStr: string) {
 }
 
 export default function PassoHorario({ empresaId, barbeiroId, servicoId, data, onSelecionar, onVoltar }: Props) {
-  const [slots, setSlots]       = useState<Slot[]>([])
-  const [carregando, setCarregando] = useState(true)
-  const [erro, setErro]         = useState<string | null>(null)
+  const [slots, setSlots]             = useState<Slot[]>([])
+  const [carregando, setCarregando]   = useState(true)
+  const [erro, setErro]               = useState<string | null>(null)
+  const [slotSelecionado, setSlotSelecionado] = useState<string | null>(null)
 
   useEffect(() => {
     setCarregando(true)
     setErro(null)
+    setSlotSelecionado(null)
 
     fetch(
       `/api/disponibilidade?empresa_id=${empresaId}&barbeiro_id=${barbeiroId}&servico_id=${servicoId}&data=${data}`
@@ -51,6 +53,8 @@ export default function PassoHorario({ empresaId, barbeiroId, servicoId, data, o
         setCarregando(false)
       })
   }, [empresaId, barbeiroId, servicoId, data])
+
+  const slotEscolhido = slots.find(s => s.hora_inicio === slotSelecionado)
 
   return (
     <div className="space-y-4">
@@ -82,23 +86,44 @@ export default function PassoHorario({ empresaId, barbeiroId, servicoId, data, o
 
       {!carregando && !erro && slots.length > 0 && (
         <div className="grid grid-cols-3 gap-2">
-          {slots.map(slot => (
-            <button
-              key={slot.hora_inicio}
-              onClick={() => onSelecionar(slot.hora_inicio, slot.hora_fim)}
-              className="h-12 bg-zinc-900 hover:bg-amber-500 border border-zinc-800
-                         hover:border-amber-500 rounded-xl text-white hover:text-black
-                         text-sm font-medium transition-all active:scale-95"
-            >
-              {formatarHora(slot.hora_inicio)}
-            </button>
-          ))}
+          {slots.map(slot => {
+            const selecionado = slotSelecionado === slot.hora_inicio
+            return (
+              <button
+                key={slot.hora_inicio}
+                onClick={() => setSlotSelecionado(slot.hora_inicio)}
+                className={[
+                  'h-12 border rounded-xl text-sm font-medium transition-all active:scale-95',
+                  selecionado
+                    ? 'bg-amber-500 border-amber-500 text-black'
+                    : 'bg-zinc-900 border-zinc-800 text-white hover:bg-amber-500/20 hover:border-amber-500/50 hover:text-amber-400',
+                ].join(' ')}
+              >
+                {formatarHora(slot.hora_inicio)}
+              </button>
+            )
+          })}
+        </div>
+      )}
+
+      {!carregando && !erro && slots.length > 0 && (
+        <div className="pt-2">
+          <button
+            onClick={() => {
+              if (slotEscolhido) onSelecionar(slotEscolhido.hora_inicio, slotEscolhido.hora_fim)
+            }}
+            disabled={!slotSelecionado}
+            className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600
+                       text-black font-semibold rounded-xl py-4 text-sm transition-all"
+          >
+            {slotSelecionado ? `Confirmar ${formatarHora(slotSelecionado)}` : 'Selecione um horário'}
+          </button>
         </div>
       )}
 
       <button
         onClick={onVoltar}
-        className="w-full py-3 text-zinc-400 hover:text-white text-sm transition-colors"
+        className="w-full py-2 text-zinc-400 hover:text-white text-sm transition-colors"
       >
         ← Voltar
       </button>

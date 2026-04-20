@@ -40,6 +40,16 @@ BEGIN
       'admin'
     );
 
+    -- cria horários de funcionamento padrão (Seg a Sab)
+    INSERT INTO horarios_funcionamento (empresa_id, dia_semana, hora_inicio, hora_fim)
+    VALUES 
+      (v_empresa_id, 1, '09:00', '19:00'), -- Segunda
+      (v_empresa_id, 2, '09:00', '19:00'), -- Terça
+      (v_empresa_id, 3, '09:00', '19:00'), -- Quarta
+      (v_empresa_id, 4, '09:00', '19:00'), -- Quinta
+      (v_empresa_id, 5, '09:00', '19:00'), -- Sexta
+      (v_empresa_id, 6, '09:00', '15:00'); -- Sábado
+
   ELSE
     -- login de usuário já existente — apenas garante que o registro existe
     -- (caso o usuário seja convidado por outro meio no futuro)
@@ -48,7 +58,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql SECURITY DEFINER;
+$$ LANGUAGE plpgsql SECURITY DEFINER SET search_path = public;
 
 -- dispara após inserção em auth.users
 CREATE OR REPLACE TRIGGER on_auth_user_created

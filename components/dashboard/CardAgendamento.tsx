@@ -76,7 +76,7 @@ export default function CardAgendamento({ agendamento: ag }: Props) {
       ? window.prompt('Motivo do cancelamento (opcional):') ?? undefined
       : undefined
 
-    const res = await atualizarStatus(ag.id, novoStatus, motivo)
+    const res = await atualizarStatus(ag.id, novoStatus as any, motivo)
     if (!res.erro) setStatus(novoStatus)
     setLoading(false)
   }

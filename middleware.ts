@@ -66,7 +66,7 @@ export async function middleware(request: NextRequest) {
     {
       cookies: {
         getAll: () => request.cookies.getAll(),
-        setAll(cookiesToSet) {
+        setAll(cookiesToSet: { name: string; value: string; options: any }[]) {
           cookiesToSet.forEach(({ name, value }) => request.cookies.set(name, value))
           response = NextResponse.next({ request })
           cookiesToSet.forEach(({ name, value, options }) =>
@@ -89,22 +89,33 @@ export async function middleware(request: NextRequest) {
       return NextResponse.redirect(url)
     }
 
-    // injeta empresa_id no header para uso em Server Components sem nova query
-    const { data: usuario } = await supabase
-      .from('usuarios')
-      .select('empresa_id, role')
-      .eq('id', user.id)
-      .single()
+    // Tenta usar as claims JWT sincronizadas no login (Performance ✨)
+    let empresa_id = user.user_metadata?.empresa_id
+    let role = user.user_metadata?.role
 
-    if (!usuario) {
-      // usuário autenticado mas sem registro — derruba para login
-      const url = request.nextUrl.clone()
-      url.pathname = '/login'
-      return NextResponse.redirect(url)
+    // Fallback: Se não tiver no metadata (ex: sessão antiga), busca no banco
+    if (!empresa_id || !role) {
+      const { data } = await supabase
+        .from('usuarios')
+        .select('empresa_id, role')
+        .eq('id', user.id)
+        .single()
+      
+      const usuario = data as any // bypass type error until types regenerated
+
+      if (!usuario) {
+        // usuário autenticado mas sem registro — derruba para login
+        const url = request.nextUrl.clone()
+        url.pathname = '/login'
+        return NextResponse.redirect(url)
+      }
+      
+      empresa_id = usuario.empresa_id
+      role = usuario.role
     }
 
-    response.headers.set('x-empresa-id', usuario.empresa_id)
-    response.headers.set('x-user-role',  usuario.role)
+    response.headers.set('x-empresa-id', empresa_id)
+    response.headers.set('x-user-role', role)
     return response
   }
 

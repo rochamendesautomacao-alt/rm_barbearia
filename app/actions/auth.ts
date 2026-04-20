@@ -12,10 +12,28 @@ export async function login(formData: FormData) {
   const email = formData.get('email') as string
   const senha = formData.get('senha') as string
 
-  const { error } = await supabase.auth.signInWithPassword({ email, password: senha })
+  const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
 
   if (error) {
     redirect(`/login?erro=${encodeURIComponent(error.message)}`)
+  }
+
+  // Sincroniza claims no JWT para deixar o middleware muito mais rápido
+  if (data?.user) {
+    const { data: usuario } = await supabase
+      .from('usuarios')
+      .select('empresa_id, role')
+      .eq('id', data.user.id)
+      .single()
+
+    if (usuario && (data.user.user_metadata?.empresa_id !== usuario.empresa_id || data.user.user_metadata?.role !== usuario.role)) {
+      await supabase.auth.updateUser({
+        data: {
+          empresa_id: usuario.empresa_id,
+          role: usuario.role,
+        }
+      })
+    }
   }
 
   redirect('/agenda')

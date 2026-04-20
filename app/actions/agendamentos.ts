@@ -12,14 +12,14 @@ export async function atualizarStatus(
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) return { erro: 'Não autenticado' }
 
-  const atualizacao: Record<string, unknown> = { status }
+  const atualizacao: any = { status }
   if (status === 'cancelado') {
     atualizacao.cancelado_em     = new Date().toISOString()
     atualizacao.cancelado_motivo = motivo ?? null
   }
 
-  const { error } = await supabase
-    .from('agendamentos')
+  const { error } = await (supabase
+    .from('agendamentos') as any)
     .update(atualizacao)
     .eq('id', id)
 

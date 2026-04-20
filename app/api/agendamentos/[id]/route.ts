@@ -18,7 +18,7 @@ export async function GET(_req: NextRequest, { params }: Params) {
     return NextResponse.json({ erro: 'Não autenticado' }, { status: 401 })
   }
 
-  const { data, error } = await supabase
+  const { data, error }: { data: any, error: any } = await supabase
     .from('vw_agenda_dia')
     .select('*')
     .eq('id' as never, id)
@@ -61,7 +61,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   const { status, cancelado_motivo } = parsed.data
 
   // valida transições de status permitidas
-  const { data: atual, error: erroAtual } = await supabase
+  const { data: atual, error: erroAtual }: { data: any, error: any } = await supabase
     .from('agendamentos')
     .select('status')
     .eq('id', id)
@@ -87,7 +87,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
     )
   }
 
-  const atualizacao: Record<string, unknown> = { status }
+  const atualizacao: any = { status }
 
   if (status === 'cancelado') {
     atualizacao.cancelado_em     = new Date().toISOString()
@@ -95,8 +95,7 @@ export async function PATCH(req: NextRequest, { params }: Params) {
   }
 
   // RLS garante que só atualiza agendamentos da empresa do usuário
-  const { data: agendamento, error } = await supabase
-    .from('agendamentos')
+  const { data: agendamento, error }: { data: any, error: any } = await (supabase.from('agendamentos') as any)
     .update(atualizacao)
     .eq('id', id)
     .select('id, status, cancelado_em, cancelado_motivo')
@@ -124,7 +123,7 @@ export async function DELETE(_req: NextRequest, { params }: Params) {
   }
 
   // verifica se o usuário é admin
-  const { data: usuario } = await supabase
+  const { data: usuario }: { data: any } = await supabase
     .from('usuarios')
     .select('role')
     .eq('id', user.id)

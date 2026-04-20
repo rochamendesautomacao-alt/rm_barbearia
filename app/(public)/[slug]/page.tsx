@@ -10,25 +10,27 @@ export default async function PaginaBarbearia({ params }: Props) {
   const { slug } = await params
   const supabase = await createClient()
 
-  const { data: empresa } = await supabase
+  const { data: empresaData } = await supabase
     .from('empresas')
-    .select('id, nome, slug, logo_url, cor_primaria, telefone, cidade, estado')
+    .select('*')
     .eq('slug', slug)
     .eq('ativo', true)
     .single()
 
-  if (!empresa) notFound()
+  if (!empresaData) notFound()
+
+  const empresa = empresaData as any
 
   const [{ data: servicos }, { data: barbeiros }] = await Promise.all([
     supabase
       .from('servicos')
-      .select('id, nome, descricao, duracao_minutos, preco')
+      .select('*')
       .eq('empresa_id', empresa.id)
       .eq('ativo', true)
       .order('nome'),
     supabase
       .from('barbeiros')
-      .select('id, nome, foto_url, bio')
+      .select('*')
       .eq('empresa_id', empresa.id)
       .eq('ativo', true)
       .order('nome'),
