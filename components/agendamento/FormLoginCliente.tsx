@@ -38,6 +38,8 @@ export default function FormLoginCliente({
         toast.success('Bem-vindo de volta!')
       }
     } catch (err) {
+      if (err && typeof err === 'object' && 'digest' in err &&
+          String((err as { digest: unknown }).digest).startsWith('NEXT_REDIRECT')) throw err
       toast.error('Erro ao entrar. Tente novamente.')
     } finally {
       setEnviando(false)

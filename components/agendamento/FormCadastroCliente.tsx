@@ -32,6 +32,8 @@ export default function FormCadastroCliente({
         toast.success('Conta criada com sucesso!')
       }
     } catch (err) {
+      if (err && typeof err === 'object' && 'digest' in err &&
+          String((err as { digest: unknown }).digest).startsWith('NEXT_REDIRECT')) throw err
       toast.error('Erro ao criar conta. Tente novamente.')
     } finally {
       setEnviando(false)
