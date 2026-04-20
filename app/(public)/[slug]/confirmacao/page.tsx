@@ -1,7 +1,6 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import type { AgendamentoDia } from '@/types/database'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Props {
   params:       Promise<{ slug: string }>
@@ -31,12 +30,28 @@ export default async function ConfirmacaoPage({ params, searchParams }: Props) {
 
   if (!id) notFound()
 
-  const supabase = await createClient()
+  // Admin client server-side: política anon foi removida na migration 011
+  const admin = createAdminClient()
 
-  const { data: todos } = await supabase.from('vw_agenda_dia').select('*')
-  const agendamento = ((todos ?? []) as AgendamentoDia[]).find(a => a.id === id)
+  const { data: ag } = await admin
+    .from('agendamentos')
+    .select('id, data_hora_inicio, data_hora_fim, preco_cobrado, status, barbeiro_id, servico_id')
+    .eq('id', id)
+    .single()
 
-  if (!agendamento) notFound()
+  if (!ag) notFound()
+
+  const [{ data: servico }, { data: barbeiro }] = await Promise.all([
+    admin.from('servicos').select('nome, duracao_minutos').eq('id', ag.servico_id).single(),
+    admin.from('barbeiros').select('nome').eq('id', ag.barbeiro_id).single(),
+  ])
+
+  if (!servico || !barbeiro) notFound()
+
+  const agendamento     = ag
+  const servico_nome    = servico.nome
+  const duracao_minutos = servico.duracao_minutos
+  const barbeiro_nome   = barbeiro.nome
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">
@@ -71,7 +86,7 @@ export default async function ConfirmacaoPage({ params, searchParams }: Props) {
               <span className="text-zinc-600 text-lg mt-0.5">✂</span>
               <div>
                 <p className="text-zinc-500 text-xs">Serviço</p>
-                <p className="text-white font-medium">{agendamento.servico_nome}</p>
+                <p className="text-white font-medium">{servico_nome}</p>
                 <p className="text-zinc-400 text-sm">{formatarPreco(agendamento.preco_cobrado)}</p>
               </div>
             </div>
@@ -82,7 +97,7 @@ export default async function ConfirmacaoPage({ params, searchParams }: Props) {
               <span className="text-zinc-600 text-lg mt-0.5">👤</span>
               <div>
                 <p className="text-zinc-500 text-xs">Barbeiro</p>
-                <p className="text-white font-medium">{agendamento.barbeiro_nome}</p>
+                <p className="text-white font-medium">{barbeiro_nome}</p>
               </div>
             </div>
 
@@ -97,7 +112,7 @@ export default async function ConfirmacaoPage({ params, searchParams }: Props) {
                 </p>
                 <p className="text-zinc-400 text-sm">
                   {formatarHora(agendamento.data_hora_inicio)} – {formatarHora(agendamento.data_hora_fim)}
-                  <span className="text-zinc-600 ml-2">({agendamento.duracao_minutos} min)</span>
+                  <span className="text-zinc-600 ml-2">({duracao_minutos} min)</span>
                 </p>
               </div>
             </div>

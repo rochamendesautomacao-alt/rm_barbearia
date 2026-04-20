@@ -1,8 +1,8 @@
 'use server'
 
 import { revalidatePath } from 'next/cache'
-import { createClient } from '@/lib/supabase/server'
 import { verificarLimiteBarbeiro, tratarErroBanco } from '@/lib/planos'
+import { getEmpresaId } from '@/lib/auth-utils'
 import { z } from 'zod'
 
 const Schema = z.object({
@@ -10,21 +10,6 @@ const Schema = z.object({
   bio:      z.string().max(300).optional(),
   telefone: z.string().max(20).optional(),
 })
-
-async function getEmpresaId() {
-  const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
-  if (!user) throw new Error('Não autenticado')
-
-  const { data }: { data: any } = await supabase
-    .from('usuarios')
-    .select('empresa_id')
-    .eq('id', user.id)
-    .single()
-
-  if (!data) throw new Error('Empresa não encontrada')
-  return { supabase, empresa_id: data.empresa_id }
-}
 
 export async function criarBarbeiro(formData: FormData) {
   const parsed = Schema.safeParse({
@@ -40,8 +25,8 @@ export async function criarBarbeiro(formData: FormData) {
   const limite = await verificarLimiteBarbeiro(empresa_id)
   if (!limite.permitido) return { erro: limite.motivo }
 
-  const { error } = await (supabase
-    .from('barbeiros') as any)
+  const { error } = await supabase
+    .from('barbeiros')
     .insert({ ...parsed.data, empresa_id })
 
   if (error) {
@@ -63,8 +48,8 @@ export async function editarBarbeiro(id: string, formData: FormData) {
 
   const { supabase } = await getEmpresaId()
 
-  const { error } = await (supabase
-    .from('barbeiros') as any)
+  const { error } = await supabase
+    .from('barbeiros')
     .update(parsed.data)
     .eq('id', id)
 
@@ -77,8 +62,8 @@ export async function editarBarbeiro(id: string, formData: FormData) {
 export async function toggleBarbeiro(id: string, ativo: boolean) {
   const { supabase } = await getEmpresaId()
 
-  const { error } = await (supabase
-    .from('barbeiros') as any)
+  const { error } = await supabase
+    .from('barbeiros')
     .update({ ativo })
     .eq('id', id)
 

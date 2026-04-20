@@ -15,7 +15,8 @@ export async function login(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
 
   if (error) {
-    redirect(`/login?erro=${encodeURIComponent(error.message)}`)
+    // Mensagem genérica para não vazar se o e-mail existe ou não
+    redirect(`/login?erro=${encodeURIComponent('E-mail ou senha inválidos')}`)
   }
 
   // Sincroniza claims no JWT para deixar o middleware muito mais rápido
@@ -73,7 +74,10 @@ export async function cadastrar(formData: FormData) {
   })
 
   if (error) {
-    redirect(`/registro?erro=${encodeURIComponent(error.message)}`)
+    const msg = error.message.includes('already registered')
+      ? 'Este e-mail já está cadastrado'
+      : 'Erro ao criar conta. Tente novamente.'
+    redirect(`/registro?erro=${encodeURIComponent(msg)}`)
   }
 
   redirect('/agenda')

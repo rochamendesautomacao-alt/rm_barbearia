@@ -67,14 +67,17 @@ export async function editarCliente(id: string, formData: FormData) {
   return { ok: true }
 }
 
+const escapeIlike = (s: string) => s.replace(/[\\%_]/g, c => `\\${c}`)
+
 export async function buscarClientes(q: string, empresaId: string) {
   const supabase = await createClient()
+  const eq = escapeIlike(q)
 
   const { data } = await supabase
     .from('clientes')
     .select('id, nome, telefone, email')
     .eq('empresa_id', empresaId)
-    .or(`nome.ilike.%${q}%,telefone.ilike.%${q}%`)
+    .or(`nome.ilike.%${eq}%,telefone.ilike.%${eq}%`)
     .order('nome')
     .limit(10)
 

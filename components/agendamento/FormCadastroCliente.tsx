@@ -1,17 +1,11 @@
 'use client'
 
 import { useState } from 'react'
+import { toast } from 'sonner'
+import { formatarTelefone } from '@/lib/format'
 import { cadastrarCliente } from '@/app/actions/clientes'
 
 type ActionFn = (slug: string, fd: FormData) => Promise<{ erro?: string } | undefined>
-
-function formatarTelefone(v: string) {
-  const d = v.replace(/\D/g, '').slice(0, 11)
-  if (d.length <= 2)  return `(${d}`
-  if (d.length <= 7)  return `(${d.slice(0,2)}) ${d.slice(2)}`
-  if (d.length <= 11) return `(${d.slice(0,2)}) ${d.slice(2,7)}-${d.slice(7)}`
-  return v
-}
 
 interface Props {
   slug: string
@@ -23,31 +17,40 @@ export default function FormCadastroCliente({
   cadastrarAction = cadastrarCliente,
 }: Props) {
   const [telefone, setTelefone] = useState('')
-  const [erro,     setErro]     = useState('')
   const [enviando, setEnviando] = useState(false)
 
   async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
-    setErro('')
     setEnviando(true)
     const fd = new FormData(e.currentTarget)
-    const resultado = await cadastrarAction(slug, fd)
-    setEnviando(false)
-    if (resultado?.erro) setErro(resultado.erro)
+    
+    try {
+      const resultado = await cadastrarAction(slug, fd)
+      if (resultado?.erro) {
+        toast.error(resultado.erro)
+      } else {
+        toast.success('Conta criada com sucesso!')
+      }
+    } catch (err) {
+      toast.error('Erro ao criar conta. Tente novamente.')
+    } finally {
+      setEnviando(false)
+    }
   }
 
   const inputCls = `w-full bg-zinc-900 border border-zinc-700 rounded-xl px-4 py-3
-    text-white placeholder-zinc-600 text-sm
-    focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent`
+    text-white placeholder-zinc-600 text-sm transition-all
+    focus:outline-none focus:ring-2 focus:ring-amber-500/50 focus:border-amber-500`
 
   return (
     <form onSubmit={handleSubmit} className="space-y-4">
-      <div>
-        <label className="text-sm text-zinc-300 mb-1 block">Nome *</label>
+      <div className="space-y-1">
+        <label className="text-sm text-zinc-400 ml-1">Nome completo *</label>
         <input name="nome" required minLength={2} placeholder="João Silva" className={inputCls} />
       </div>
-      <div>
-        <label className="text-sm text-zinc-300 mb-1 block">WhatsApp / Telefone *</label>
+      
+      <div className="space-y-1">
+        <label className="text-sm text-zinc-400 ml-1">WhatsApp / Telefone *</label>
         <input
           name="telefone"
           value={telefone}
@@ -57,12 +60,14 @@ export default function FormCadastroCliente({
           className={inputCls}
         />
       </div>
-      <div>
-        <label className="text-sm text-zinc-300 mb-1 block">E-mail *</label>
+      
+      <div className="space-y-1">
+        <label className="text-sm text-zinc-400 ml-1">E-mail *</label>
         <input name="email" type="email" required placeholder="voce@email.com" className={inputCls} />
       </div>
-      <div>
-        <label className="text-sm text-zinc-300 mb-1 block">Senha *</label>
+      
+      <div className="space-y-1">
+        <label className="text-sm text-zinc-400 ml-1">Senha *</label>
         <input
           name="senha"
           type="password"
@@ -73,14 +78,12 @@ export default function FormCadastroCliente({
         />
       </div>
 
-      {erro && <p className="text-red-400 text-sm">{erro}</p>}
-
       <button
         type="submit"
         disabled={enviando}
         className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800
-                   disabled:text-zinc-600 text-black font-semibold
-                   rounded-xl py-4 text-sm transition-all active:scale-[0.98]"
+                   disabled:text-zinc-600 text-black font-bold
+                   rounded-xl py-4 text-sm transition-all active:scale-[0.98] shadow-lg shadow-amber-500/10"
       >
         {enviando ? 'Criando conta...' : 'Criar conta'}
       </button>

@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 import type { Barbeiro } from './FluxoAgendamento'
 
@@ -14,24 +12,31 @@ export default function PassoBarbeiro({ barbeiros, onSelecionar, onVoltar }: Pro
 
   if (barbeiros.length === 0) {
     return (
-      <div className="space-y-4">
-        <div className="mb-5">
-          <h2 className="text-white text-lg font-semibold">Escolha o barbeiro</h2>
-          <p className="text-zinc-400 text-sm mt-0.5">Quem vai te atender?</p>
+      <div className="space-y-6">
+        <div className="mb-2">
+          <h2 className="text-white text-xl font-bold italic tracking-tighter uppercase">Escolha o Profissional</h2>
+          <p className="text-zinc-500 text-sm mt-1 uppercase tracking-widest font-black text-[10px]">Quem vai cuidar do seu visual?</p>
         </div>
-        <div className="text-center py-12 text-zinc-500">Nenhum barbeiro disponível no momento.</div>
-        <button onClick={onVoltar} className="w-full py-3 text-zinc-400 hover:text-white text-sm transition-colors">
-          ← Voltar
+        <div className="flex flex-col items-center justify-center py-20 text-center space-y-4">
+          <div className="w-16 h-16 rounded-full bg-zinc-900 flex items-center justify-center border border-zinc-800">
+             <svg className="w-8 h-8 text-zinc-700" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+               <path strokeLinecap="round" strokeLinejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+             </svg>
+          </div>
+          <p className="text-zinc-500 text-sm font-black uppercase tracking-widest">Nenhum barbeiro disponível</p>
+        </div>
+        <button onClick={onVoltar} className="w-full py-4 text-zinc-600 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all">
+          ← Voltar para Serviços
         </button>
       </div>
     )
   }
 
   return (
-    <div className="space-y-4">
-      <div className="mb-5">
-        <h2 className="text-white text-lg font-semibold">Escolha o barbeiro</h2>
-        <p className="text-zinc-400 text-sm mt-0.5">Quem vai te atender?</p>
+    <div className="space-y-6">
+      <div className="mb-2">
+        <h2 className="text-white text-xl font-bold italic tracking-tighter uppercase">Escolha o Profissional</h2>
+        <p className="text-zinc-500 text-sm mt-1 uppercase tracking-widest font-black text-[10px]">Quem vai cuidar do seu visual?</p>
       </div>
 
       <div className="space-y-3">
@@ -42,54 +47,70 @@ export default function PassoBarbeiro({ barbeiros, onSelecionar, onVoltar }: Pro
               key={b.id}
               onClick={() => setSelecionadoId(b.id)}
               className={[
-                'w-full text-left bg-zinc-900 border rounded-xl p-4 transition-all group',
+                'w-full text-left bg-zinc-900/50 backdrop-blur-sm border rounded-2xl p-5 transition-all duration-300 group relative overflow-hidden',
                 selecionado
-                  ? 'border-amber-500 ring-1 ring-amber-500'
-                  : 'border-zinc-800 hover:border-amber-500/50',
+                  ? 'border-amber-500 bg-amber-500/5 shadow-lg shadow-amber-500/10 scale-[1.02]'
+                  : 'border-zinc-800/80 hover:border-amber-500/30',
               ].join(' ')}
             >
-              <div className="flex items-center gap-3">
-                {b.foto_url ? (
-                  <img src={b.foto_url} alt={b.nome} className="w-12 h-12 rounded-full object-cover shrink-0" />
-                ) : (
-                  <div className="w-12 h-12 rounded-full bg-zinc-700 flex items-center justify-center shrink-0">
-                    <span className="text-zinc-300 font-semibold text-lg">{b.nome.charAt(0).toUpperCase()}</span>
-                  </div>
-                )}
+              <div className="flex items-center gap-5 relative z-10">
+                <div className="relative group/avatar">
+                  <div className={[
+                    'absolute -inset-1 bg-gradient-to-r from-amber-500 to-amber-600 rounded-full blur opacity-0 transition duration-500',
+                    selecionado ? 'opacity-30' : 'group-hover:opacity-20'
+                  ].join(' ')}></div>
+                  {b.foto_url ? (
+                    <img src={b.foto_url} alt={b.nome} className="relative w-16 h-16 rounded-full object-cover border-2 border-zinc-700 shadow-xl" />
+                  ) : (
+                    <div className="relative w-16 h-16 rounded-full bg-zinc-800 flex items-center justify-center border-2 border-zinc-700 shadow-lg text-zinc-400 font-bold text-2xl uppercase italic">
+                      {b.nome.charAt(0)}
+                    </div>
+                  )}
+                </div>
 
                 <div className="min-w-0 flex-1">
-                  <p className={`font-medium transition-colors ${selecionado ? 'text-amber-400' : 'text-white group-hover:text-amber-400'}`}>
+                  <p className={`text-lg font-black uppercase italic tracking-tighter transition-colors ${selecionado ? 'text-white' : 'text-zinc-300 group-hover:text-white'}`}>
                     {b.nome}
                   </p>
-                  {b.bio && <p className="text-zinc-500 text-sm mt-0.5 line-clamp-2">{b.bio}</p>}
+                  {b.bio && <p className="text-zinc-500 text-[11px] mt-1 line-clamp-2 italic leading-relaxed">{b.bio}</p>}
                 </div>
 
-                <div className={`w-5 h-5 rounded-full border flex items-center justify-center shrink-0 ${selecionado ? 'border-amber-500' : 'border-zinc-600'}`}>
-                  {selecionado && <div className="w-2.5 h-2.5 bg-amber-500 rounded-full" />}
+                <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center shrink-0 transition-all ${selecionado ? 'border-amber-500 bg-amber-500' : 'border-zinc-700'}`}>
+                  {selecionado && (
+                    <svg className="w-3 h-3 text-black" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                  )}
                 </div>
               </div>
+              {/* Efeito de detalhe lateral */}
+              {selecionado && <div className="absolute left-0 top-0 bottom-0 w-1 bg-amber-500"></div>}
             </button>
           )
         })}
       </div>
 
-      <div className="pt-2">
+      <div className="pt-4 flex flex-col gap-3">
         <button
           onClick={() => {
             const b = barbeiros.find(x => x.id === selecionadoId)
             if (b) onSelecionar(b)
           }}
           disabled={!selecionadoId}
-          className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600
-                     text-black font-semibold rounded-xl py-4 text-sm transition-all"
+          className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-900 disabled:text-zinc-700
+                     text-black font-black uppercase tracking-widest
+                     rounded-2xl py-5 text-sm transition-all shadow-xl shadow-amber-500/10 active:scale-[0.98]"
         >
-          Avançar
+          Avançar para escolha da data
+        </button>
+        
+        <button
+          onClick={onVoltar}
+          className="w-full py-3 text-zinc-600 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
+        >
+          ← Voltar para Serviços
         </button>
       </div>
-
-      <button onClick={onVoltar} className="w-full py-2 text-zinc-400 hover:text-white text-sm transition-colors">
-        ← Voltar
-      </button>
     </div>
   )
 }

@@ -171,6 +171,7 @@ export interface Database {
           telefone: string
           email: string | null
           observacoes: string | null
+          auth_user_id: string | null
           created_at: string
           updated_at: string
         }
@@ -181,6 +182,7 @@ export interface Database {
           telefone: string
           email?: string | null
           observacoes?: string | null
+          auth_user_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -191,6 +193,7 @@ export interface Database {
           telefone?: string
           email?: string | null
           observacoes?: string | null
+          auth_user_id?: string | null
           created_at?: string
           updated_at?: string
         }
@@ -400,7 +403,7 @@ export interface Database {
       }
     }
     Functions: {
-      minha_empresa_id: { Args: Record<never, never>; Returns: string }
+      minha_empresa_id: { Args: Record<PropertyKey, never>; Returns: string }
       horarios_disponiveis: {
         Args: {
           p_barbeiro_id: string
@@ -415,6 +418,9 @@ export interface Database {
       role_usuario: RoleUsuario
       status_agendamento: StatusAgendamento
       status_assinatura: StatusAssinatura
+    }
+    CompositeTypes: {
+      [_ in never]: never
     }
   }
 }

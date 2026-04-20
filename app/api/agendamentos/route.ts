@@ -98,8 +98,22 @@ export async function POST(req: NextRequest) {
 
   // rota pública usa anon key — RLS permite INSERT em agendamentos sem login
   const supabase = await createClient()
+  // admin client para operações que não devem ser bloqueadas por RLS (conflito, insert)
+  const supabaseAdmin = createAdminClient()
 
-  // 0. verifica limite do plano antes de qualquer coisa
+  // 0a. valida que empresa_id existe e está ativa (impede bookings em tenants arbitrários)
+  const { data: empresaAtiva } = await supabase
+    .from('empresas')
+    .select('id')
+    .eq('id', empresa_id)
+    .eq('ativo', true)
+    .single()
+
+  if (!empresaAtiva) {
+    return NextResponse.json({ erro: 'Empresa não encontrada' }, { status: 404 })
+  }
+
+  // 0b. verifica limite do plano antes de qualquer coisa
   const limite = await verificarLimiteAgendamento(empresa_id)
   if (!limite.permitido) {
     return NextResponse.json({ erro: limite.motivo }, { status: 402 })
@@ -121,7 +135,8 @@ export async function POST(req: NextRequest) {
   const data_hora_fim = calcularFim(data_hora_inicio, servico.duracao_minutos)
 
   // 2. verifica conflito de horário (proteção dupla — o banco também tem EXCLUDE)
-  const temConflito = await verificarConflito(supabase, {
+  // usa admin client para não ser bloqueado por RLS quando o cliente está autenticado
+  const temConflito = await verificarConflito(supabaseAdmin, {
     barbeiro_id,
     data_hora_inicio,
     data_hora_fim,
@@ -135,7 +150,6 @@ export async function POST(req: NextRequest) {
   }
 
   // 3. upsert do cliente por telefone + empresa (evita duplicatas)
-  const supabaseAdmin = createAdminClient()
   const { data: cliente, error: erroCliente } = await supabaseAdmin
     .from('clientes')
     .upsert(
@@ -164,9 +178,8 @@ export async function POST(req: NextRequest) {
       .is('auth_user_id', null)
   }
 
-  // 4. cria o agendamento
-  // data_hora_fim e preco_cobrado são calculados pelos triggers do banco
-  const { data: agendamento, error: erroAg } = await supabase
+  // 4. cria o agendamento usando admin client (RLS bloqueia authenticated clients)
+  const { data: agendamento, error: erroAg } = await supabaseAdmin
     .from('agendamentos')
     .insert({
       empresa_id,

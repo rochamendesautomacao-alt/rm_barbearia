@@ -36,7 +36,12 @@ export default async function AgendaPage({ searchParams }: Props) {
   const supabase = await createClient()
 
   const [{ data: raw }, { data: barbeiros }, { data: servicos }, { data: horarios }] = await Promise.all([
-    supabase.from('vw_agenda_dia').select('*'),
+    supabase
+      .from('vw_agenda_dia')
+      .select('*')
+      .eq('empresa_id', usuario?.empresa_id)
+      .gte('data_hora_inicio', `${data}T00:00:00+00:00`)
+      .lte('data_hora_inicio', `${data}T23:59:59+00:00`),
     supabase
       .from('barbeiros')
       .select('id, nome')
@@ -56,10 +61,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const diasAtivos = (horarios ?? []).map((h: any) => Number(h.dia_semana))
 
-  const lista = ((raw ?? []) as AgendamentoDia[]).filter(a => {
-    const d = a.data_hora_inicio?.split('T')[0]
-    return d === data
-  }).sort((a, b) =>
+  const lista = ((raw ?? []) as AgendamentoDia[]).sort((a, b) =>
     new Date(a.data_hora_inicio).getTime() - new Date(b.data_hora_inicio).getTime()
   )
 

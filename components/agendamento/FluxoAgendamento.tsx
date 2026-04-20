@@ -31,12 +31,20 @@ interface Empresa {
   cor_primaria: string
 }
 
+export interface ClienteLogado {
+  id: string
+  nome: string
+  telefone: string
+  email: string | null
+}
+
 interface Props {
   empresa:          Empresa
   servicos:         Servico[]
   barbeiros:        Barbeiro[]
   diasAtivos:       number[]
   basePath?:           string
+  clienteLogado?:      ClienteLogado
   reagendarId?:        string
   initialServico?:     Servico
   initialBarbeiro?:    Barbeiro
@@ -55,7 +63,7 @@ const PASSOS = ['Serviço', 'Barbeiro', 'Data', 'Horário', 'Confirmar']
 
 export default function FluxoAgendamento({
   empresa, servicos, barbeiros, diasAtivos,
-  basePath,
+  basePath, clienteLogado,
   reagendarId, initialServico, initialBarbeiro,
   cancelarReagendar,
 }: Props) {
@@ -72,13 +80,13 @@ export default function FluxoAgendamento({
     slot_fim: null,
   })
   const [enviando, setEnviando] = useState(false)
-  const [erro, setErro]         = useState<string | null>(null)
+  const [erroEnvio, setErroEnvio] = useState<string | null>(null)
 
   function avancar() { setPasso(p => Math.min(p + 1, PASSOS.length - 1)) }
   function voltar()  {
     if (isReagendar && passo === 2) return  // impede voltar para serviço/barbeiro pré-selecionados
     setPasso(p => Math.max(p - 1, 0))
-    setErro(null)
+    setErroEnvio(null)
   }
 
   function selecionarServico(s: Servico) {
@@ -124,7 +132,7 @@ export default function FluxoAgendamento({
       const json = await res.json()
 
       if (!res.ok) {
-        setErro(json.erro ?? 'Erro ao criar agendamento')
+        setErroEnvio(json.erro ?? 'Erro ao criar agendamento')
         return
       }
 
@@ -134,42 +142,59 @@ export default function FluxoAgendamento({
 
       router.push(`${base}/confirmacao?id=${json.agendamento.id}`)
     } catch {
-      setErro('Erro de conexão. Tente novamente.')
+      setErroEnvio('Erro de conexão. Tente novamente.')
     } finally {
       setEnviando(false)
     }
   }
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in duration-700">
       {/* Indicador de passos */}
-      <nav aria-label="Passos do agendamento">
-        <ol className="flex items-center gap-0">
+      <nav aria-label="Passos do agendamento" className="px-2">
+        <ol className="flex items-center justify-between w-full">
           {PASSOS.map((nome, i) => (
-            <li key={nome} className="flex items-center flex-1 last:flex-none">
-              <div className="flex flex-col items-center gap-1">
-                <div
-                  className={[
-                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold transition-colors',
-                    i < passo  ? 'bg-amber-500 text-black'           : '',
-                    i === passo ? 'bg-amber-500 text-black ring-2 ring-amber-500 ring-offset-2 ring-offset-zinc-950' : '',
-                    i > passo  ? 'bg-zinc-800 text-zinc-500'         : '',
-                  ].join(' ')}
-                >
-                  {i < passo ? '✓' : i + 1}
-                </div>
-                <span className={[
-                  'text-[10px] hidden sm:block',
-                  i === passo ? 'text-amber-500 font-medium' : 'text-zinc-600',
-                ].join(' ')}>
-                  {nome}
-                </span>
+            <li key={nome} className="flex flex-col items-center gap-2 group relative">
+              <div
+                className={[
+                  'w-8 h-8 rounded-full flex items-center justify-center text-xs font-black transition-all duration-500 z-10',
+                  i < passo  
+                    ? 'bg-amber-500 text-black shadow-[0_0_15px_rgba(245,158,11,0.4)] scale-90' 
+                    : '',
+                  i === passo 
+                    ? 'bg-amber-500 text-black ring-4 ring-amber-500/20 scale-110 shadow-[0_0_20px_rgba(245,158,11,0.6)]' 
+                    : '',
+                  i > passo  
+                    ? 'bg-zinc-900 border border-zinc-800 text-zinc-600' 
+                    : '',
+                ].join(' ')}
+              >
+                {i < passo ? (
+                  <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  i + 1
+                )}
               </div>
+              <span className={[
+                'text-[9px] uppercase tracking-widest font-black transition-all duration-300 whitespace-nowrap',
+                i === passo ? 'text-amber-500 opacity-100' : 'text-zinc-600 opacity-50 group-hover:opacity-80',
+              ].join(' ')}>
+                {nome}
+              </span>
+              
+              {/* Linha conectora */}
               {i < PASSOS.length - 1 && (
-                <div className={[
-                  'flex-1 h-px mx-1 transition-colors',
-                  i < passo ? 'bg-amber-500' : 'bg-zinc-800',
-                ].join(' ')} />
+                <div 
+                  className="absolute left-[50%] top-4 w-[100%] h-[2px] -z-0"
+                  style={{ width: 'calc(100% * 1.5)' }}
+                >
+                  <div className={[
+                    'h-full transition-all duration-700 ease-out',
+                    i < passo ? 'bg-amber-500' : 'bg-zinc-800'
+                  ].join(' ')} />
+                </div>
               )}
             </li>
           ))}
@@ -178,51 +203,58 @@ export default function FluxoAgendamento({
 
       {/* Banner de reagendamento */}
       {isReagendar && (
-        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 text-amber-400 text-sm">
-          Escolha a nova data e horário para <span className="font-semibold">{estado.servico?.nome}</span> com {estado.barbeiro?.nome}.
+        <div className="bg-amber-500/5 border border-amber-500/20 rounded-2xl px-5 py-4 flex items-center gap-4 animate-in slide-in-from-top-4 duration-500">
+          <div className="w-10 h-10 rounded-full bg-amber-500/20 flex items-center justify-center shrink-0">
+            <svg className="w-5 h-5 text-amber-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={2}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <div>
+            <p className="text-amber-500 text-sm font-bold">Reagendamento em curso</p>
+            <p className="text-amber-500/60 text-xs mt-0.5">
+              Defina o novo horário para <span className="font-bold text-amber-500/90">{estado.servico?.nome}</span>.
+            </p>
+          </div>
         </div>
       )}
 
-      {/* Erro global */}
-      {erro && (
-        <div className="bg-red-500/10 border border-red-500/20 rounded-xl p-3 text-red-400 text-sm">
-          {erro}
+      {/* Conteúdo do passo atual com animação */}
+      <div className="min-h-[450px] relative">
+        <div key={passo} className="animate-in fade-in slide-in-from-bottom-2 duration-500 ease-out">
+          {passo === 0 && (
+            <PassoServico servicos={servicos} onSelecionar={selecionarServico} />
+          )}
+          {passo === 1 && (
+            <PassoBarbeiro
+              barbeiros={barbeiros}
+              onSelecionar={selecionarBarbeiro}
+              onVoltar={voltar}
+            />
+          )}
+          {passo === 2 && (
+            <PassoData diasAtivos={diasAtivos} onSelecionar={selecionarData} onVoltar={voltar} />
+          )}
+          {passo === 3 && estado.servico && estado.barbeiro && estado.data && (
+            <PassoHorario
+              empresaId={empresa.id}
+              barbeiroId={estado.barbeiro.id}
+              servicoId={estado.servico.id}
+              data={estado.data}
+              onSelecionar={selecionarSlot}
+              onVoltar={voltar}
+            />
+          )}
+          {passo === 4 && (
+            <PassoCliente
+              estado={estado}
+              enviando={enviando}
+              erro={erroEnvio}
+              clienteLogado={clienteLogado}
+              onConfirmar={confirmar}
+              onVoltar={voltar}
+            />
+          )}
         </div>
-      )}
-
-      {/* Conteúdo do passo atual */}
-      <div className="min-h-[400px]">
-        {passo === 0 && (
-          <PassoServico servicos={servicos} onSelecionar={selecionarServico} />
-        )}
-        {passo === 1 && (
-          <PassoBarbeiro
-            barbeiros={barbeiros}
-            onSelecionar={selecionarBarbeiro}
-            onVoltar={voltar}
-          />
-        )}
-        {passo === 2 && (
-          <PassoData diasAtivos={diasAtivos} onSelecionar={selecionarData} onVoltar={voltar} />
-        )}
-        {passo === 3 && estado.servico && estado.barbeiro && estado.data && (
-          <PassoHorario
-            empresaId={empresa.id}
-            barbeiroId={estado.barbeiro.id}
-            servicoId={estado.servico.id}
-            data={estado.data}
-            onSelecionar={selecionarSlot}
-            onVoltar={voltar}
-          />
-        )}
-        {passo === 4 && (
-          <PassoCliente
-            estado={estado}
-            enviando={enviando}
-            onConfirmar={confirmar}
-            onVoltar={voltar}
-          />
-        )}
       </div>
     </div>
   )

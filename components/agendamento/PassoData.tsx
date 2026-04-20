@@ -1,5 +1,3 @@
-'use client'
-
 import { useState } from 'react'
 
 interface Props {
@@ -8,7 +6,7 @@ interface Props {
   onVoltar:     () => void
 }
 
-const DIAS_SEMANA = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
+const DIAS_SEMANA_ABBR = ['Dom', 'Seg', 'Ter', 'Qua', 'Qui', 'Sex', 'Sáb']
 const MESES = [
   'Janeiro','Fevereiro','Março','Abril','Maio','Junho',
   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
@@ -53,7 +51,6 @@ export default function PassoData({ diasAtivos, onSelecionar, onVoltar }: Props)
 
   function isDiaFechado(dia: number) {
     const dow = new Date(ano, mes, dia).getDay()
-    // se diasAtivos foi fornecido, bloqueia dias não configurados; senão bloqueia só domingo
     return diasAtivos.length > 0 ? !diasAtivos.includes(dow) : dow === 0
   }
 
@@ -66,7 +63,6 @@ export default function PassoData({ diasAtivos, onSelecionar, onVoltar }: Props)
     setDataSelecionada(toDataStr(dia))
   }
 
-  // verifica se o mês anterior está totalmente no passado
   const podeIrAntes = (() => {
     const d = new Date(ano, mes, 1)
     const agora = new Date(hoje.getFullYear(), hoje.getMonth(), 1)
@@ -80,50 +76,60 @@ export default function PassoData({ diasAtivos, onSelecionar, onVoltar }: Props)
   })()
 
   return (
-    <div className="space-y-4">
-      <div className="mb-5">
-        <h2 className="text-white text-lg font-semibold">Escolha a data</h2>
-        <p className="text-zinc-400 text-sm mt-0.5">Quando você quer ser atendido?</p>
+    <div className="space-y-6">
+      <div className="mb-2">
+        <h2 className="text-white text-xl font-bold italic tracking-tighter uppercase">Qual o melhor dia?</h2>
+        <p className="text-zinc-500 text-sm mt-1 uppercase tracking-widest font-black text-[10px]">Agendamento disponível para próximos 60 dias</p>
       </div>
 
       {/* Cabeçalho do calendário */}
-      <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-        <div className="flex items-center justify-between mb-4">
+      <div className="bg-gradient-to-br from-zinc-900 to-zinc-950 border border-zinc-800 rounded-3xl p-6 shadow-2xl">
+        <div className="flex items-center justify-between mb-8">
           <button
             onClick={mesAnterior}
             disabled={!podeIrAntes}
-            className="w-8 h-8 flex items-center justify-center text-zinc-400
-                       hover:text-white disabled:text-zinc-700 disabled:cursor-not-allowed
-                       rounded-lg hover:bg-zinc-800 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-zinc-400
+                       hover:text-white disabled:text-zinc-800 disabled:cursor-not-allowed
+                       rounded-2xl hover:bg-zinc-800 transition-all active:scale-90 border border-zinc-800/50"
           >
-            ‹
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15 19l-7-7 7-7" />
+            </svg>
           </button>
-          <span className="text-white font-medium text-sm">
-            {MESES[mes]} {ano}
-          </span>
+          
+          <div className="text-center">
+            <span className="text-white font-black text-sm uppercase tracking-widest italic">
+              {MESES[mes]}
+            </span>
+            <span className="text-zinc-600 font-bold text-[10px] ml-2">
+              {ano}
+            </span>
+          </div>
+
           <button
             onClick={proximoMes}
             disabled={!podeIrDepois}
-            className="w-8 h-8 flex items-center justify-center text-zinc-400
-                       hover:text-white disabled:text-zinc-700 disabled:cursor-not-allowed
-                       rounded-lg hover:bg-zinc-800 transition-colors"
+            className="w-10 h-10 flex items-center justify-center text-zinc-400
+                       hover:text-white disabled:text-zinc-800 disabled:cursor-not-allowed
+                       rounded-2xl hover:bg-zinc-800 transition-all active:scale-90 border border-zinc-800/50"
           >
-            ›
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={3}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 5l7 7-7 7" />
+            </svg>
           </button>
         </div>
 
         {/* Dias da semana */}
-        <div className="grid grid-cols-7 mb-2">
-          {DIAS_SEMANA.map(d => (
-            <div key={d} className="text-center text-zinc-600 text-xs py-1 font-medium">
+        <div className="grid grid-cols-7 mb-4">
+          {DIAS_SEMANA_ABBR.map((d, i) => (
+            <div key={d} className={`text-center text-[10px] py-1 font-black uppercase tracking-tighter ${i === 0 ? 'text-red-500/50' : 'text-zinc-600'}`}>
               {d}
             </div>
           ))}
         </div>
 
         {/* Dias do mês */}
-        <div className="grid grid-cols-7 gap-y-1">
-          {/* células vazias antes do primeiro dia */}
+        <div className="grid grid-cols-7 gap-1">
           {Array.from({ length: primeiroDia }).map((_, i) => (
             <div key={`vazio-${i}`} />
           ))}
@@ -142,40 +148,40 @@ export default function PassoData({ diasAtivos, onSelecionar, onVoltar }: Props)
                 onClick={() => handleDia(dia)}
                 disabled={desabilitado}
                 className={[
-                  'h-9 w-full rounded-lg text-sm font-medium transition-all',
+                  'h-11 w-full rounded-xl text-xs font-black transition-all duration-300 relative group',
                   desabilitado
-                    ? 'text-zinc-700 cursor-not-allowed'
+                    ? 'text-zinc-800 cursor-not-allowed'
                     : selecionado
-                    ? 'bg-amber-500 text-black'
-                    : 'text-white hover:bg-amber-500/20 hover:text-amber-400 active:scale-95',
+                    ? 'bg-amber-500 text-black shadow-lg shadow-amber-500/20 scale-110 z-10'
+                    : 'text-zinc-300 hover:bg-zinc-800 hover:text-white hover:scale-105 active:scale-90',
                 ].join(' ')}
               >
                 {dia}
+                {!desabilitado && !selecionado && <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-1 h-1 bg-amber-500/20 rounded-full opacity-0 group-hover:opacity-100 transition-opacity"></div>}
               </button>
             )
           })}
         </div>
       </div>
 
-      <p className="text-zinc-600 text-xs text-center">
-        Apenas dias com horário configurado estão disponíveis
-      </p>
-
-      <button
-        onClick={() => { if (dataSelecionada) onSelecionar(dataSelecionada) }}
-        disabled={!dataSelecionada}
-        className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800 disabled:text-zinc-600
-                   text-black font-semibold rounded-xl py-4 text-sm transition-all"
-      >
-        {dataSelecionada ? 'Avançar' : 'Selecione uma data'}
-      </button>
-
-      <button
-        onClick={onVoltar}
-        className="w-full py-2 text-zinc-400 hover:text-white text-sm transition-colors"
-      >
-        ← Voltar
-      </button>
+      <div className="pt-4 flex flex-col gap-3">
+        <button
+          onClick={() => { if (dataSelecionada) onSelecionar(dataSelecionada) }}
+          disabled={!dataSelecionada}
+          className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-900 disabled:text-zinc-700
+                     text-black font-black uppercase tracking-widest
+                     rounded-2xl py-5 text-sm transition-all shadow-xl shadow-amber-500/10 active:scale-[0.98]"
+        >
+          {dataSelecionada ? 'Avançar para horários' : 'Selecione uma data'}
+        </button>
+        
+        <button
+          onClick={onVoltar}
+          className="w-full py-3 text-zinc-600 hover:text-white text-[10px] font-bold uppercase tracking-[0.2em] transition-all"
+        >
+          ← Voltar para Profissionais
+        </button>
+      </div>
     </div>
   )
 }
