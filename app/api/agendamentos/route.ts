@@ -154,6 +154,16 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ erro: 'Erro ao registrar cliente' }, { status: 500 })
   }
 
+  // Se houver sessão ativa, vincular auth_user_id ao registro (sem sobrescrever vínculo existente)
+  const { data: { user: usuarioLogado } } = await supabase.auth.getUser()
+  if (usuarioLogado) {
+    await supabaseAdmin
+      .from('clientes')
+      .update({ auth_user_id: usuarioLogado.id })
+      .eq('id', cliente.id)
+      .is('auth_user_id', null)
+  }
+
   // 4. cria o agendamento
   // data_hora_fim e preco_cobrado são calculados pelos triggers do banco
   const { data: agendamento, error: erroAg } = await supabase

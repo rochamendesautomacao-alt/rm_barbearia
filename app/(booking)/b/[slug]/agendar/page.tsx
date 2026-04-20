@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { getClienteAutenticado } from '@/app/actions/clientes'
+import { getClienteAutenticado, cancelarAgendamentoCliente } from '@/app/actions/clientes'
 import FluxoAgendamento, { type Servico, type Barbeiro } from '@/components/agendamento/FluxoAgendamento'
 
 interface Props {
@@ -56,6 +56,10 @@ export default async function AgendarBPage({ params, searchParams }: Props) {
     }
   }
 
+  const cancelarFn = reagendarId
+    ? cancelarAgendamentoCliente.bind(null, reagendarId, slug, base)
+    : undefined
+
   return (
     <div className="min-h-screen bg-zinc-950">
       <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-4">
@@ -91,6 +95,7 @@ export default async function AgendarBPage({ params, searchParams }: Props) {
           reagendarId={reagendarId}
           initialServico={initialServico}
           initialBarbeiro={initialBarbeiro}
+          cancelarReagendar={cancelarFn}
         />
       </main>
     </div>

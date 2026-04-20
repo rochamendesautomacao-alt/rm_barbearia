@@ -7,7 +7,6 @@ import PassoBarbeiro from './PassoBarbeiro'
 import PassoData from './PassoData'
 import PassoHorario from './PassoHorario'
 import PassoCliente from './PassoCliente'
-import { cancelarAgendamentoCliente } from '@/app/actions/clientes'
 
 export interface Servico {
   id: string
@@ -37,10 +36,11 @@ interface Props {
   servicos:         Servico[]
   barbeiros:        Barbeiro[]
   diasAtivos:       number[]
-  basePath?:        string   // ex: '/b/rm-barbearia' — padrão: '/{slug}'
-  reagendarId?:     string
-  initialServico?:  Servico
-  initialBarbeiro?: Barbeiro
+  basePath?:           string
+  reagendarId?:        string
+  initialServico?:     Servico
+  initialBarbeiro?:    Barbeiro
+  cancelarReagendar?:  (id: string) => Promise<{ ok?: boolean; erro?: string } | undefined>
 }
 
 export interface EstadoAgendamento {
@@ -57,6 +57,7 @@ export default function FluxoAgendamento({
   empresa, servicos, barbeiros, diasAtivos,
   basePath,
   reagendarId, initialServico, initialBarbeiro,
+  cancelarReagendar,
 }: Props) {
   const base = basePath ?? `/${empresa.slug}`
   const router  = useRouter()
@@ -127,8 +128,8 @@ export default function FluxoAgendamento({
         return
       }
 
-      if (reagendarId) {
-        await cancelarAgendamentoCliente(reagendarId, empresa.slug, base).catch(() => null)
+      if (reagendarId && cancelarReagendar) {
+        await cancelarReagendar(reagendarId).catch(() => null)
       }
 
       router.push(`${base}/confirmacao?id=${json.agendamento.id}`)
