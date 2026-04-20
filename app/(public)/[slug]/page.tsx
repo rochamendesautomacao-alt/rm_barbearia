@@ -1,4 +1,5 @@
 import { notFound } from 'next/navigation'
+import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import FluxoAgendamento from '@/components/agendamento/FluxoAgendamento'
 
@@ -40,26 +41,34 @@ export default async function PaginaBarbearia({ params }: Props) {
     <div className="min-h-screen bg-zinc-950">
       {/* Header da barbearia */}
       <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-4">
-        <div className="max-w-lg mx-auto flex items-center gap-3">
-          {empresa.logo_url ? (
-            <img
-              src={empresa.logo_url}
-              alt={empresa.nome}
-              className="w-10 h-10 rounded-full object-cover"
-            />
-          ) : (
-            <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
-              <span className="text-black font-bold text-lg">
-                {empresa.nome.charAt(0).toUpperCase()}
-              </span>
-            </div>
-          )}
-          <div>
-            <h1 className="text-white font-semibold text-base leading-tight">{empresa.nome}</h1>
-            {empresa.cidade && (
-              <p className="text-zinc-400 text-xs">{empresa.cidade}{empresa.estado ? `, ${empresa.estado}` : ''}</p>
+        <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            {empresa.logo_url ? (
+              <img
+                src={empresa.logo_url}
+                alt={empresa.nome}
+                className="w-10 h-10 rounded-full object-cover"
+              />
+            ) : (
+              <div className="w-10 h-10 rounded-full bg-amber-500 flex items-center justify-center">
+                <span className="text-black font-bold text-lg">
+                  {empresa.nome.charAt(0).toUpperCase()}
+                </span>
+              </div>
             )}
+            <div>
+              <h1 className="text-white font-semibold text-base leading-tight">{empresa.nome}</h1>
+              {empresa.cidade && (
+                <p className="text-zinc-400 text-xs">{empresa.cidade}{empresa.estado ? `, ${empresa.estado}` : ''}</p>
+              )}
+            </div>
           </div>
+          <Link
+            href={`/${empresa.slug}/meus-agendamentos`}
+            className="text-zinc-400 hover:text-amber-400 text-xs transition-colors shrink-0"
+          >
+            Minha conta
+          </Link>
         </div>
       </header>
 

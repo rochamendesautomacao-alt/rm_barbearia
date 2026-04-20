@@ -17,8 +17,11 @@ const PREFIXOS_DASHBOARD = [
 // API routes públicas (sem autenticação — chamadas pelo cliente ao agendar)
 const API_PUBLICA = /^\/api\/(disponibilidade|agendamentos|empresas)/
 
-// Slug da barbearia: /minha-barbearia ou /minha-barbearia/confirmacao
-const ROTA_BARBEARIA = /^\/([a-z0-9-]+)(\/confirmacao)?$/
+// Slug da barbearia: /minha-barbearia e subpáginas públicas do cliente
+const ROTA_BARBEARIA = /^\/([a-z0-9-]+)(\/confirmacao|\/entrar|\/cadastro|\/meus-agendamentos)?$/
+
+// Subpáginas protegidas do cliente (exigem auth de cliente)
+const SUBROTAS_CLIENTE_PROTEGIDAS = new Set(['/meus-agendamentos'])
 
 // Slugs reservados que não devem ser interpretados como barbearias
 const SLUGS_RESERVADOS = new Set([
@@ -40,13 +43,6 @@ function isRotaAuth(pathname: string) {
 
 function isApiPublica(pathname: string) {
   return API_PUBLICA.test(pathname)
-}
-
-function extrairSlug(pathname: string): string | null {
-  const match = ROTA_BARBEARIA.exec(pathname)
-  if (!match) return null
-  const slug = match[1]
-  return SLUGS_RESERVADOS.has(slug) ? null : slug
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -127,10 +123,24 @@ export async function middleware(request: NextRequest) {
   }
 
   // ── 3. ROTA DE BARBEARIA — injeta slug no header ──────────────────────────
-  const slug = extrairSlug(pathname)
-  if (slug) {
-    response.headers.set('x-empresa-slug', slug)
-    return response
+  const match = ROTA_BARBEARIA.exec(pathname)
+  if (match) {
+    const slug    = match[1]
+    const subrota = match[2] ?? ''
+    if (!SLUGS_RESERVADOS.has(slug)) {
+      response.headers.set('x-empresa-slug', slug)
+
+      // Subpáginas protegidas: exigem cliente autenticado
+      if (SUBROTAS_CLIENTE_PROTEGIDAS.has(subrota)) {
+        if (!user) {
+          const url = request.nextUrl.clone()
+          url.pathname = `/${slug}/entrar`
+          return NextResponse.redirect(url)
+        }
+      }
+
+      return response
+    }
   }
 
   return response

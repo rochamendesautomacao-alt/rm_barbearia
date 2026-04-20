@@ -1,6 +1,8 @@
 import { createClient } from '@/lib/supabase/server'
 import CardAgendamento from '@/components/dashboard/CardAgendamento'
 import NavegacaoDia from '@/components/dashboard/NavegacaoDia'
+import AgendaClientWrapper from '@/components/dashboard/AgendaClientWrapper'
+import { getUsuarioComEmpresa } from '@/app/actions/auth'
 import type { AgendamentoDia } from '@/types/database'
 
 interface Props {
@@ -27,14 +29,25 @@ function calcularTotais(agendamentos: AgendamentoDia[]) {
 }
 
 export default async function AgendaPage({ searchParams }: Props) {
-  const params = await searchParams
-  const data   = params.data ?? hoje()
+  const params  = await searchParams
+  const data    = params.data ?? hoje()
+  const usuario = await getUsuarioComEmpresa()
 
   const supabase = await createClient()
 
-  const { data: raw } = await supabase
-    .from('vw_agenda_dia')
-    .select('*')
+  const [{ data: raw }, { data: barbeiros }, { data: servicos }] = await Promise.all([
+    supabase.from('vw_agenda_dia').select('*'),
+    supabase
+      .from('barbeiros')
+      .select('id, nome')
+      .eq('ativo', true)
+      .order('nome'),
+    supabase
+      .from('servicos')
+      .select('id, nome, duracao_minutos, preco')
+      .eq('ativo', true)
+      .order('nome'),
+  ])
 
   const lista = ((raw ?? []) as AgendamentoDia[]).filter(a => {
     const d = a.data_hora_inicio?.split('T')[0]
@@ -60,6 +73,12 @@ export default async function AgendaPage({ searchParams }: Props) {
       </div>
 
       <NavegacaoDia dataAtual={data} />
+
+      <AgendaClientWrapper
+        empresaId={usuario?.empresa_id ?? ''}
+        barbeiros={barbeiros ?? []}
+        servicos={servicos ?? []}
+      />
 
       <div className="grid grid-cols-2 gap-3">
         <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
