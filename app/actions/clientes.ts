@@ -189,7 +189,7 @@ export async function getAgendamentosCliente(clienteId: string) {
   const { data } = await supabase
     .from('agendamentos')
     .select(`
-      id, data_hora_inicio, data_hora_fim, status, preco_cobrado,
+      id, servico_id, barbeiro_id, data_hora_inicio, data_hora_fim, status, preco_cobrado,
       barbeiros(nome),
       servicos(nome)
     `)
@@ -197,4 +197,80 @@ export async function getAgendamentosCliente(clienteId: string) {
     .order('data_hora_inicio', { ascending: false })
 
   return (data ?? []) as any[]
+}
+
+export async function loginClientePorTelefone(slug: string, formData: FormData) {
+  const telefone = (formData.get('telefone') as string)?.replace(/\D/g, '')
+  const senha    = formData.get('senha') as string
+
+  if (!telefone || telefone.length < 10) return { erro: 'Telefone inválido' }
+  if (!senha) return { erro: 'Preencha a senha' }
+
+  const empresa = await getTenantPorSlug(slug)
+  if (!empresa) return { erro: 'Barbearia não encontrada' }
+
+  const admin = createAdminClient()
+  const { data: cliente } = await admin
+    .from('clientes')
+    .select('email')
+    .eq('telefone', telefone)
+    .eq('empresa_id', empresa.id)
+    .single()
+
+  if (!cliente?.email) return { erro: 'Telefone não cadastrado. Verifique o número ou crie uma conta.' }
+
+  const supabase = await createClient()
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: cliente.email,
+    password: senha,
+  })
+
+  if (error) return { erro: 'Telefone ou senha inválidos' }
+
+  const tipo = data.user?.user_metadata?.tipo
+  if (tipo && tipo !== 'cliente') {
+    await supabase.auth.signOut()
+    return { erro: 'Use o painel administrativo para acessar sua conta.' }
+  }
+
+  redirect(`/${slug}/meus-agendamentos`)
+}
+
+export async function cancelarAgendamentoCliente(agendamentoId: string, slug: string, basePath?: string) {
+  const supabase = await createClient()
+
+  const { data: { user } } = await supabase.auth.getUser()
+  if (!user) return { erro: 'Não autenticado' }
+
+  const { data: cliente } = await supabase
+    .from('clientes')
+    .select('id')
+    .eq('auth_user_id', user.id)
+    .single()
+
+  if (!cliente) return { erro: 'Cliente não encontrado' }
+
+  const admin = createAdminClient()
+  const { data: agendamento } = await admin
+    .from('agendamentos')
+    .select('id, status')
+    .eq('id', agendamentoId)
+    .eq('cliente_id', cliente.id)
+    .single()
+
+  if (!agendamento) return { erro: 'Agendamento não encontrado' }
+
+  if (!['pendente', 'confirmado'].includes(agendamento.status)) {
+    return { erro: 'Este agendamento não pode ser cancelado' }
+  }
+
+  const { error } = await admin
+    .from('agendamentos')
+    .update({ status: 'cancelado', cancelado_em: new Date().toISOString() })
+    .eq('id', agendamentoId)
+
+  if (error) return { erro: 'Erro ao cancelar agendamento' }
+
+  revalidatePath(basePath ? `${basePath}/meus-agendamentos` : `/${slug}/meus-agendamentos`)
+  return { ok: true }
 }

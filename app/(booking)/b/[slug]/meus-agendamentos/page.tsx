@@ -1,7 +1,9 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
+import { createClient } from '@/lib/supabase/server'
 import { getTenantPorSlug } from '@/lib/tenant'
-import { getClienteAutenticado, getAgendamentosCliente, logoutCliente } from '@/app/actions/clientes'
+import { getClienteAutenticado, getAgendamentosCliente } from '@/app/actions/clientes'
+import { logoutClienteB } from '@/app/actions/booking-publico'
 import BotoesAgendamentoCliente from '@/components/agendamento/BotoesAgendamentoCliente'
 
 interface Props {
@@ -34,22 +36,18 @@ function formatarDataHora(iso: string) {
   })
 }
 
-export default async function MeusAgendamentosPage({ params }: Props) {
+export default async function MeusAgendamentosBPage({ params }: Props) {
   const { slug } = await params
+  const base     = `/b/${slug}`
   const empresa  = await getTenantPorSlug(slug)
   if (!empresa) notFound()
 
   const cliente = await getClienteAutenticado(empresa.id)
-  if (!cliente) redirect(`/${slug}/entrar`)
+  if (!cliente) redirect(`${base}/entrar`)
 
   const agendamentos = await getAgendamentosCliente(cliente.id)
-
-  const futuros   = agendamentos.filter(a =>
-    !['cancelado', 'no_show', 'concluido'].includes(a.status)
-  )
-  const historico = agendamentos.filter(a =>
-    ['cancelado', 'no_show', 'concluido'].includes(a.status)
-  )
+  const futuros      = agendamentos.filter(a => !['cancelado', 'no_show', 'concluido'].includes(a.status))
+  const historico    = agendamentos.filter(a => ['cancelado', 'no_show', 'concluido'].includes(a.status))
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -68,11 +66,8 @@ export default async function MeusAgendamentosPage({ params }: Props) {
               <p className="text-zinc-400 text-xs">{cliente.nome}</p>
             </div>
           </div>
-          <form action={logoutCliente.bind(null, slug)}>
-            <button
-              type="submit"
-              className="text-zinc-500 hover:text-red-400 text-xs transition-colors"
-            >
+          <form action={logoutClienteB.bind(null, slug)}>
+            <button type="submit" className="text-zinc-500 hover:text-red-400 text-xs transition-colors">
               Sair
             </button>
           </form>
@@ -83,31 +78,30 @@ export default async function MeusAgendamentosPage({ params }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-white text-xl font-bold">Meus agendamentos</h2>
           <Link
-            href={`/${slug}`}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold
-                       rounded-xl text-sm transition-colors"
+            href={`${base}/agendar`}
+            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black
+                       font-semibold rounded-xl text-sm transition-colors"
           >
             + Novo
           </Link>
         </div>
 
-        {/* Próximos */}
         {futuros.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wide">
               Próximos ({futuros.length})
             </h3>
             {futuros.map(a => (
-              <CardAgendamentoCliente key={a.id} agendamento={a} slug={slug} isFuturo />
+              <CardAgendamento key={a.id} agendamento={a} slug={slug} base={base} isFuturo />
             ))}
           </div>
         )}
 
         {futuros.length === 0 && (
-          <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-6 text-center">
+          <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
             <p className="text-zinc-500 text-sm">Você não tem agendamentos futuros.</p>
             <Link
-              href={`/${slug}`}
+              href={`${base}/agendar`}
               className="inline-block mt-3 px-4 py-2 bg-amber-500 hover:bg-amber-400
                          text-black font-semibold rounded-xl text-sm transition-colors"
             >
@@ -116,14 +110,13 @@ export default async function MeusAgendamentosPage({ params }: Props) {
           </div>
         )}
 
-        {/* Histórico */}
         {historico.length > 0 && (
           <div className="space-y-2">
             <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wide">
               Histórico ({historico.length})
             </h3>
             {historico.map(a => (
-              <CardAgendamentoCliente key={a.id} agendamento={a} slug={slug} isFuturo={false} />
+              <CardAgendamento key={a.id} agendamento={a} slug={slug} base={base} isFuturo={false} />
             ))}
           </div>
         )}
@@ -132,17 +125,11 @@ export default async function MeusAgendamentosPage({ params }: Props) {
   )
 }
 
-function CardAgendamentoCliente({
-  agendamento: a,
-  slug,
-  isFuturo,
-}: {
-  agendamento: any
-  slug: string
-  isFuturo: boolean
-}) {
+function CardAgendamento({
+  agendamento: a, slug, base, isFuturo,
+}: { agendamento: any; slug: string; base: string; isFuturo: boolean }) {
   return (
-    <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-2">
+    <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-4 space-y-2">
       <div className="flex items-start justify-between gap-2">
         <div>
           <p className="text-white font-medium text-sm">{a.servicos?.nome ?? '—'}</p>
@@ -165,6 +152,7 @@ function CardAgendamentoCliente({
           agendamentoId={a.id}
           status={a.status}
           slug={slug}
+          basePath={base}
         />
       )}
     </div>

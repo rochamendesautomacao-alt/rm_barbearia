@@ -7,6 +7,7 @@ import PassoBarbeiro from './PassoBarbeiro'
 import PassoData from './PassoData'
 import PassoHorario from './PassoHorario'
 import PassoCliente from './PassoCliente'
+import { cancelarAgendamentoCliente } from '@/app/actions/clientes'
 
 export interface Servico {
   id: string
@@ -32,10 +33,14 @@ interface Empresa {
 }
 
 interface Props {
-  empresa:    Empresa
-  servicos:   Servico[]
-  barbeiros:  Barbeiro[]
-  diasAtivos: number[]   // dias da semana com horário configurado (0=Dom..6=Sáb)
+  empresa:          Empresa
+  servicos:         Servico[]
+  barbeiros:        Barbeiro[]
+  diasAtivos:       number[]
+  basePath?:        string   // ex: '/b/rm-barbearia' — padrão: '/{slug}'
+  reagendarId?:     string
+  initialServico?:  Servico
+  initialBarbeiro?: Barbeiro
 }
 
 export interface EstadoAgendamento {
@@ -48,12 +53,19 @@ export interface EstadoAgendamento {
 
 const PASSOS = ['Serviço', 'Barbeiro', 'Data', 'Horário', 'Confirmar']
 
-export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAtivos }: Props) {
+export default function FluxoAgendamento({
+  empresa, servicos, barbeiros, diasAtivos,
+  basePath,
+  reagendarId, initialServico, initialBarbeiro,
+}: Props) {
+  const base = basePath ?? `/${empresa.slug}`
   const router  = useRouter()
-  const [passo, setPasso] = useState(0)
+  const isReagendar = Boolean(reagendarId && initialServico && initialBarbeiro)
+
+  const [passo, setPasso] = useState(() => isReagendar ? 2 : 0)
   const [estado, setEstado] = useState<EstadoAgendamento>({
-    servico:  null,
-    barbeiro: null,
+    servico:  initialServico  ?? null,
+    barbeiro: initialBarbeiro ?? null,
     data:     null,
     slot:     null,
     slot_fim: null,
@@ -62,7 +74,11 @@ export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAti
   const [erro, setErro]         = useState<string | null>(null)
 
   function avancar() { setPasso(p => Math.min(p + 1, PASSOS.length - 1)) }
-  function voltar()  { setPasso(p => Math.max(p - 1, 0)); setErro(null) }
+  function voltar()  {
+    if (isReagendar && passo === 2) return  // impede voltar para serviço/barbeiro pré-selecionados
+    setPasso(p => Math.max(p - 1, 0))
+    setErro(null)
+  }
 
   function selecionarServico(s: Servico) {
     setEstado(e => ({ ...e, servico: s, barbeiro: null, data: null, slot: null, slot_fim: null }))
@@ -94,13 +110,13 @@ export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAti
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          empresa_id:      empresa.id,
-          barbeiro_id:     estado.barbeiro.id,
-          servico_id:      estado.servico.id,
+          empresa_id:       empresa.id,
+          barbeiro_id:      estado.barbeiro.id,
+          servico_id:       estado.servico.id,
           data_hora_inicio: estado.slot,
-          cliente_nome:    cliente.nome,
+          cliente_nome:     cliente.nome,
           cliente_telefone: cliente.telefone,
-          cliente_email:   cliente.email,
+          cliente_email:    cliente.email,
         }),
       })
 
@@ -111,7 +127,11 @@ export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAti
         return
       }
 
-      router.push(`/${empresa.slug}/confirmacao?id=${json.agendamento.id}`)
+      if (reagendarId) {
+        await cancelarAgendamentoCliente(reagendarId, empresa.slug, base).catch(() => null)
+      }
+
+      router.push(`${base}/confirmacao?id=${json.agendamento.id}`)
     } catch {
       setErro('Erro de conexão. Tente novamente.')
     } finally {
@@ -154,6 +174,13 @@ export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAti
           ))}
         </ol>
       </nav>
+
+      {/* Banner de reagendamento */}
+      {isReagendar && (
+        <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl px-4 py-3 text-amber-400 text-sm">
+          Escolha a nova data e horário para <span className="font-semibold">{estado.servico?.nome}</span> com {estado.barbeiro?.nome}.
+        </div>
+      )}
 
       {/* Erro global */}
       {erro && (

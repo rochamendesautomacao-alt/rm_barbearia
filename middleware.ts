@@ -18,7 +18,10 @@ const PREFIXOS_DASHBOARD = [
 const API_PUBLICA = /^\/api\/(disponibilidade|agendamentos|empresas)/
 
 // Slug da barbearia: /minha-barbearia e subpáginas públicas do cliente
-const ROTA_BARBEARIA = /^\/([a-z0-9-]+)(\/confirmacao|\/entrar|\/cadastro|\/meus-agendamentos)?$/
+const ROTA_BARBEARIA = /^\/([a-z0-9-]+)(\/confirmacao|\/entrar|\/cadastro|\/meus-agendamentos|\/agendar)?$/
+
+// Rota pública /b/[slug] e suas subpáginas
+const ROTA_B = /^\/b\/([a-z0-9-]+)(\/confirmacao|\/entrar|\/cadastro|\/meus-agendamentos|\/agendar)?$/
 
 // Subpáginas protegidas do cliente (exigem auth de cliente)
 const SUBROTAS_CLIENTE_PROTEGIDAS = new Set(['/meus-agendamentos'])
@@ -122,7 +125,7 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(url)
   }
 
-  // ── 3. ROTA DE BARBEARIA — injeta slug no header ──────────────────────────
+  // ── 3. ROTA DE BARBEARIA /{slug} — injeta slug no header ─────────────────
   const match = ROTA_BARBEARIA.exec(pathname)
   if (match) {
     const slug    = match[1]
@@ -130,7 +133,6 @@ export async function middleware(request: NextRequest) {
     if (!SLUGS_RESERVADOS.has(slug)) {
       response.headers.set('x-empresa-slug', slug)
 
-      // Subpáginas protegidas: exigem cliente autenticado
       if (SUBROTAS_CLIENTE_PROTEGIDAS.has(subrota)) {
         if (!user) {
           const url = request.nextUrl.clone()
@@ -141,6 +143,24 @@ export async function middleware(request: NextRequest) {
 
       return response
     }
+  }
+
+  // ── 4. ROTA PÚBLICA /b/{slug} — portal do cliente ─────────────────────────
+  const matchB = ROTA_B.exec(pathname)
+  if (matchB) {
+    const slug    = matchB[1]
+    const subrota = matchB[2] ?? ''
+    response.headers.set('x-empresa-slug', slug)
+
+    if (SUBROTAS_CLIENTE_PROTEGIDAS.has(subrota)) {
+      if (!user) {
+        const url = request.nextUrl.clone()
+        url.pathname = `/b/${slug}/entrar`
+        return NextResponse.redirect(url)
+      }
+    }
+
+    return response
   }
 
   return response

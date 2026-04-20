@@ -3,6 +3,8 @@
 import { useState } from 'react'
 import { cadastrarCliente } from '@/app/actions/clientes'
 
+type ActionFn = (slug: string, fd: FormData) => Promise<{ erro?: string } | undefined>
+
 function formatarTelefone(v: string) {
   const d = v.replace(/\D/g, '').slice(0, 11)
   if (d.length <= 2)  return `(${d}`
@@ -11,17 +13,25 @@ function formatarTelefone(v: string) {
   return v
 }
 
-export default function FormCadastroCliente({ slug }: { slug: string }) {
+interface Props {
+  slug: string
+  cadastrarAction?: ActionFn
+}
+
+export default function FormCadastroCliente({
+  slug,
+  cadastrarAction = cadastrarCliente,
+}: Props) {
   const [telefone, setTelefone] = useState('')
   const [erro,     setErro]     = useState('')
   const [enviando, setEnviando] = useState(false)
 
-  async function handleSubmit(e: React.FormEvent<HTMLFormElement>) {
+  async function handleSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
     e.preventDefault()
     setErro('')
     setEnviando(true)
     const fd = new FormData(e.currentTarget)
-    const resultado = await cadastrarCliente(slug, fd)
+    const resultado = await cadastrarAction(slug, fd)
     setEnviando(false)
     if (resultado?.erro) setErro(resultado.erro)
   }
@@ -34,13 +44,7 @@ export default function FormCadastroCliente({ slug }: { slug: string }) {
     <form onSubmit={handleSubmit} className="space-y-4">
       <div>
         <label className="text-sm text-zinc-300 mb-1 block">Nome *</label>
-        <input
-          name="nome"
-          required
-          minLength={2}
-          placeholder="João Silva"
-          className={inputCls}
-        />
+        <input name="nome" required minLength={2} placeholder="João Silva" className={inputCls} />
       </div>
       <div>
         <label className="text-sm text-zinc-300 mb-1 block">WhatsApp / Telefone *</label>
@@ -55,13 +59,7 @@ export default function FormCadastroCliente({ slug }: { slug: string }) {
       </div>
       <div>
         <label className="text-sm text-zinc-300 mb-1 block">E-mail *</label>
-        <input
-          name="email"
-          type="email"
-          required
-          placeholder="voce@email.com"
-          className={inputCls}
-        />
+        <input name="email" type="email" required placeholder="voce@email.com" className={inputCls} />
       </div>
       <div>
         <label className="text-sm text-zinc-300 mb-1 block">Senha *</label>

@@ -1,7 +1,8 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
-import { getClienteAutenticado, getAgendamentosCliente, logoutCliente } from '@/app/actions/clientes'
+import { getClienteAutenticado, getAgendamentosCliente } from '@/app/actions/clientes'
+import { logoutClienteB } from '@/app/actions/booking-publico'
 import BotoesAgendamentoCliente from '@/components/agendamento/BotoesAgendamentoCliente'
 
 interface Props {
@@ -28,29 +29,28 @@ function formatarDataHora(iso: string) {
   })
 }
 
-export default async function PortalClientePage({ params }: Props) {
+export default async function PortalBPage({ params }: Props) {
   const { slug } = await params
+  const base     = `/b/${slug}`
   const supabase = await createClient()
 
-  const { data: empresaData } = await supabase
+  const { data: empresa } = await supabase
     .from('empresas')
-    .select('id, nome, slug, logo_url, cidade, estado, cor_primaria')
+    .select('id, nome, slug, logo_url, cidade, estado')
     .eq('slug', slug)
     .eq('ativo', true)
     .single()
 
-  if (!empresaData) notFound()
-  const empresa = empresaData as any
+  if (!empresa) notFound()
 
-  const cliente       = await getClienteAutenticado(empresa.id)
-  const agendamentos  = cliente ? await getAgendamentosCliente(cliente.id) : []
-  const proximos      = agendamentos.filter(a =>
+  const cliente      = await getClienteAutenticado(empresa.id)
+  const agendamentos = cliente ? await getAgendamentosCliente(cliente.id) : []
+  const proximos     = agendamentos.filter(a =>
     !['cancelado', 'no_show', 'concluido'].includes(a.status)
   )
 
   return (
     <div className="min-h-screen bg-zinc-950">
-      {/* Header */}
       <header className="bg-zinc-900 border-b border-zinc-800 px-4 py-4">
         <div className="max-w-lg mx-auto flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
@@ -64,18 +64,20 @@ export default async function PortalClientePage({ params }: Props) {
             <div>
               <h1 className="text-white font-semibold text-base leading-tight">{empresa.nome}</h1>
               {empresa.cidade && (
-                <p className="text-zinc-400 text-xs">{empresa.cidade}{empresa.estado ? `, ${empresa.estado}` : ''}</p>
+                <p className="text-zinc-400 text-xs">
+                  {empresa.cidade}{empresa.estado ? `, ${empresa.estado}` : ''}
+                </p>
               )}
             </div>
           </div>
 
-          {cliente ? (
-            <form action={logoutCliente.bind(null, slug)}>
+          {cliente && (
+            <form action={logoutClienteB.bind(null, slug)}>
               <button type="submit" className="text-zinc-500 hover:text-red-400 text-xs transition-colors">
                 Sair
               </button>
             </form>
-          ) : null}
+          )}
         </div>
       </header>
 
@@ -84,18 +86,16 @@ export default async function PortalClientePage({ params }: Props) {
         {/* ─── NÃO AUTENTICADO ─── */}
         {!cliente && (
           <>
-            {/* Boas-vindas */}
             <div className="text-center py-4">
               <h2 className="text-white text-2xl font-bold">Bem-vindo!</h2>
               <p className="text-zinc-400 text-sm mt-1">
-                Agende seu horário ou acesse sua conta para gerenciar seus agendamentos.
+                Agende seu horário ou acesse sua conta.
               </p>
             </div>
 
-            {/* CTAs principais */}
             <div className="space-y-3">
               <Link
-                href={`/${slug}/agendar`}
+                href={`${base}/agendar`}
                 className="flex items-center justify-between w-full bg-amber-500 hover:bg-amber-400
                            text-black font-semibold rounded-2xl px-5 py-4 transition-colors"
               >
@@ -110,7 +110,7 @@ export default async function PortalClientePage({ params }: Props) {
 
               <div className="grid grid-cols-2 gap-3">
                 <Link
-                  href={`/${slug}/entrar`}
+                  href={`${base}/entrar`}
                   className="flex flex-col items-center gap-2 bg-zinc-900 hover:bg-zinc-800
                              border border-zinc-800 rounded-2xl px-4 py-5 transition-colors"
                 >
@@ -126,7 +126,7 @@ export default async function PortalClientePage({ params }: Props) {
                 </Link>
 
                 <Link
-                  href={`/${slug}/cadastro`}
+                  href={`${base}/cadastro`}
                   className="flex flex-col items-center gap-2 bg-zinc-900 hover:bg-zinc-800
                              border border-zinc-800 rounded-2xl px-4 py-5 transition-colors"
                 >
@@ -143,7 +143,6 @@ export default async function PortalClientePage({ params }: Props) {
               </div>
             </div>
 
-            {/* Separador informativo */}
             <div className="flex items-center gap-3">
               <div className="flex-1 h-px bg-zinc-800" />
               <p className="text-zinc-600 text-xs">Com conta você pode cancelar e reagendar</p>
@@ -155,14 +154,13 @@ export default async function PortalClientePage({ params }: Props) {
         {/* ─── AUTENTICADO ─── */}
         {cliente && (
           <>
-            {/* Saudação */}
             <div className="flex items-center justify-between">
               <div>
                 <p className="text-zinc-400 text-sm">Olá,</p>
                 <h2 className="text-white text-xl font-bold">{cliente.nome.split(' ')[0]}</h2>
               </div>
               <Link
-                href={`/${slug}/agendar`}
+                href={`${base}/agendar`}
                 className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black
                            font-semibold rounded-xl text-sm transition-colors"
               >
@@ -170,7 +168,6 @@ export default async function PortalClientePage({ params }: Props) {
               </Link>
             </div>
 
-            {/* Próximos agendamentos */}
             <section>
               <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wide mb-3">
                 Próximos agendamentos
@@ -180,7 +177,7 @@ export default async function PortalClientePage({ params }: Props) {
                 <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-6 text-center">
                   <p className="text-zinc-500 text-sm">Você não tem agendamentos futuros.</p>
                   <Link
-                    href={`/${slug}/agendar`}
+                    href={`${base}/agendar`}
                     className="inline-block mt-3 px-5 py-2.5 bg-amber-500 hover:bg-amber-400
                                text-black font-semibold rounded-xl text-sm transition-colors"
                   >
@@ -210,6 +207,7 @@ export default async function PortalClientePage({ params }: Props) {
                         agendamentoId={a.id}
                         status={a.status}
                         slug={slug}
+                        basePath={base}
                       />
                     </div>
                   ))}
@@ -217,9 +215,8 @@ export default async function PortalClientePage({ params }: Props) {
               )}
             </section>
 
-            {/* Link para histórico completo */}
             <Link
-              href={`/${slug}/meus-agendamentos`}
+              href={`${base}/meus-agendamentos`}
               className="flex items-center justify-between w-full bg-zinc-900 hover:bg-zinc-800
                          border border-zinc-800 rounded-2xl px-4 py-3 transition-colors"
             >
