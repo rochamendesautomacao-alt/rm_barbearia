@@ -112,7 +112,7 @@ export default function FluxoAgendamento({
   async function confirmar(cliente: { nome: string; telefone: string; email?: string }) {
     if (!estado.servico || !estado.barbeiro || !estado.slot) return
     setEnviando(true)
-    setErro(null)
+    setErroEnvio(null)
 
     try {
       const res = await fetch('/api/agendamentos', {
