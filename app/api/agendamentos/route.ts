@@ -96,120 +96,133 @@ export async function POST(req: NextRequest) {
     observacoes,
   } = parsed.data
 
-  // rota pública usa anon key — RLS permite INSERT em agendamentos sem login
-  const supabase = await createClient()
-  // admin client para operações que não devem ser bloqueadas por RLS (conflito, insert)
-  const supabaseAdmin = createAdminClient()
+  try {
+    // rota pública usa anon key — RLS permite INSERT em agendamentos sem login
+    const supabase = await createClient()
+    // admin client para operações que não devem ser bloqueadas por RLS (conflito, insert)
+    const supabaseAdmin = createAdminClient()
 
-  // 0a. valida que empresa_id existe e está ativa (impede bookings em tenants arbitrários)
-  const { data: empresaAtiva } = await supabase
-    .from('empresas')
-    .select('id')
-    .eq('id', empresa_id)
-    .eq('ativo', true)
-    .single()
+    // 0a. valida que empresa_id existe e está ativa (impede bookings em tenants arbitrários)
+    const { data: empresaAtiva } = await supabase
+      .from('empresas')
+      .select('id')
+      .eq('id', empresa_id)
+      .eq('ativo', true)
+      .single()
 
-  if (!empresaAtiva) {
-    return NextResponse.json({ erro: 'Empresa não encontrada' }, { status: 404 })
-  }
+    if (!empresaAtiva) {
+      return NextResponse.json({ erro: 'Empresa não encontrada' }, { status: 404 })
+    }
 
-  // 0b. verifica limite do plano antes de qualquer coisa
-  const limite = await verificarLimiteAgendamento(empresa_id)
-  if (!limite.permitido) {
-    return NextResponse.json({ erro: limite.motivo }, { status: 402 })
-  }
+    // 0b. verifica limite do plano antes de qualquer coisa
+    const limite = await verificarLimiteAgendamento(empresa_id)
+    if (!limite.permitido) {
+      return NextResponse.json({ erro: limite.motivo }, { status: 402 })
+    }
 
-  // 1. busca duração do serviço
-  const { data: servico, error: erroServico } = await supabase
-    .from('servicos')
-    .select('duracao_minutos, preco')
-    .eq('id', servico_id)
-    .eq('empresa_id', empresa_id)
-    .eq('ativo', true)
-    .single()
+    // 1. busca duração do serviço
+    const { data: servico, error: erroServico } = await supabaseAdmin
+      .from('servicos')
+      .select('duracao_minutos, preco')
+      .eq('id', servico_id)
+      .eq('empresa_id', empresa_id)
+      .eq('ativo', true)
+      .single()
 
-  if (erroServico || !servico) {
-    return NextResponse.json({ erro: 'Serviço não encontrado ou inativo' }, { status: 404 })
-  }
+    if (erroServico || !servico) {
+      return NextResponse.json({ erro: 'Serviço não encontrado ou inativo' }, { status: 404 })
+    }
 
-  const data_hora_fim = calcularFim(data_hora_inicio, servico.duracao_minutos)
+    const data_hora_fim = calcularFim(data_hora_inicio, servico.duracao_minutos)
 
-  // 2. verifica conflito de horário (proteção dupla — o banco também tem EXCLUDE)
-  // usa admin client para não ser bloqueado por RLS quando o cliente está autenticado
-  const temConflito = await verificarConflito(supabaseAdmin, {
-    barbeiro_id,
-    data_hora_inicio,
-    data_hora_fim,
-  })
+    // 2. verifica conflito de horário (proteção dupla — o banco também tem EXCLUDE)
+    let temConflito = false
+    try {
+      temConflito = await verificarConflito(supabaseAdmin, {
+        barbeiro_id,
+        data_hora_inicio,
+        data_hora_fim,
+      })
+    } catch (errConflito) {
+      console.error('[agendamentos] verificarConflito falhou:', errConflito)
+      // continua — a restrição EXCLUDE do banco é a proteção primária
+    }
 
-  if (temConflito) {
-    return NextResponse.json(
-      { erro: 'Horário não disponível. Por favor, escolha outro horário.' },
-      { status: 409 }
-    )
-  }
-
-  // 3. upsert do cliente por telefone + empresa (evita duplicatas)
-  const { data: cliente, error: erroCliente } = await supabaseAdmin
-    .from('clientes')
-    .upsert(
-      {
-        empresa_id,
-        nome:     cliente_nome,
-        telefone: cliente_telefone,
-        email:    cliente_email || null,
-      },
-      { onConflict: 'telefone,empresa_id', ignoreDuplicates: false }
-    )
-    .select('id')
-    .single()
-
-  if (erroCliente || !cliente) {
-    return NextResponse.json({ erro: 'Erro ao registrar cliente' }, { status: 500 })
-  }
-
-  // Se houver sessão ativa, vincular auth_user_id ao registro (sem sobrescrever vínculo existente)
-  const { data: { user: usuarioLogado } } = await supabase.auth.getUser()
-  if (usuarioLogado) {
-    await supabaseAdmin
-      .from('clientes')
-      .update({ auth_user_id: usuarioLogado.id })
-      .eq('id', cliente.id)
-      .is('auth_user_id', null)
-  }
-
-  // 4. cria o agendamento usando admin client (RLS bloqueia authenticated clients)
-  const { data: agendamento, error: erroAg } = await supabaseAdmin
-    .from('agendamentos')
-    .insert({
-      empresa_id,
-      cliente_id:      cliente.id,
-      barbeiro_id,
-      servico_id,
-      data_hora_inicio,
-      data_hora_fim,    // redundante — o trigger recalcula, mas enviamos para clareza
-      preco_cobrado:   servico.preco,
-      status:          'pendente',
-      observacoes:     observacoes || null,
-    })
-    .select('id, data_hora_inicio, data_hora_fim, status')
-    .single()
-
-  if (erroAg || !agendamento) {
-    // código 23P01 = violação da restrição EXCLUDE (overlap detectado pelo banco)
-    if (erroAg?.code === '23P01') {
+    if (temConflito) {
       return NextResponse.json(
         { erro: 'Horário não disponível. Por favor, escolha outro horário.' },
         { status: 409 }
       )
     }
-    // trata erro de limite vindo do trigger do banco (fallback)
-    const erroPlano = tratarErroBanco(erroAg?.message ?? '')
-    if (erroPlano) {
-      return NextResponse.json({ erro: erroPlano }, { status: 402 })
-    }
-    return NextResponse.json({ erro: 'Erro ao criar agendamento' }, { status: 500 })
-  }
 
-  return NextResponse.json({ agendamento }, { status: 201 })
+    // 3. upsert do cliente por telefone + empresa (evita duplicatas)
+    const { data: cliente, error: erroCliente } = await supabaseAdmin
+      .from('clientes')
+      .upsert(
+        {
+          empresa_id,
+          nome:     cliente_nome,
+          telefone: cliente_telefone,
+          email:    cliente_email || null,
+        },
+        { onConflict: 'telefone,empresa_id', ignoreDuplicates: false }
+      )
+      .select('id')
+      .single()
+
+    if (erroCliente || !cliente) {
+      console.error('[agendamentos] upsert cliente falhou:', erroCliente)
+      return NextResponse.json({ erro: 'Erro ao registrar cliente' }, { status: 500 })
+    }
+
+    // Se houver sessão ativa, vincular auth_user_id ao registro (sem sobrescrever vínculo existente)
+    const { data: { user: usuarioLogado } } = await supabase.auth.getUser()
+    if (usuarioLogado) {
+      await supabaseAdmin
+        .from('clientes')
+        .update({ auth_user_id: usuarioLogado.id })
+        .eq('id', cliente.id)
+        .is('auth_user_id', null)
+    }
+
+    // 4. cria o agendamento usando admin client (RLS bloqueia authenticated clients)
+    const { data: agendamento, error: erroAg } = await supabaseAdmin
+      .from('agendamentos')
+      .insert({
+        empresa_id,
+        cliente_id:      cliente.id,
+        barbeiro_id,
+        servico_id,
+        data_hora_inicio,
+        data_hora_fim,
+        preco_cobrado:   servico.preco,
+        status:          'pendente',
+        observacoes:     observacoes || null,
+      })
+      .select('id, data_hora_inicio, data_hora_fim, status')
+      .single()
+
+    if (erroAg || !agendamento) {
+      console.error('[agendamentos] insert falhou:', erroAg)
+      // código 23P01 = violação da restrição EXCLUDE (overlap detectado pelo banco)
+      if (erroAg?.code === '23P01') {
+        return NextResponse.json(
+          { erro: 'Horário não disponível. Por favor, escolha outro horário.' },
+          { status: 409 }
+        )
+      }
+      // trata erro de limite vindo do trigger do banco (fallback)
+      const erroPlano = tratarErroBanco(erroAg?.message ?? '')
+      if (erroPlano) {
+        return NextResponse.json({ erro: erroPlano }, { status: 402 })
+      }
+      return NextResponse.json({ erro: 'Erro ao criar agendamento' }, { status: 500 })
+    }
+
+    return NextResponse.json({ agendamento }, { status: 201 })
+
+  } catch (err) {
+    console.error('[agendamentos] erro inesperado:', err)
+    return NextResponse.json({ erro: 'Erro interno do servidor' }, { status: 500 })
+  }
 }
