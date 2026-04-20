@@ -205,7 +205,7 @@ export default function FormAgendamento({ empresaId, barbeiros, servicos, onFina
       `/api/disponibilidade?empresa_id=${empresaId}&barbeiro_id=${barbeiroId}&servico_id=${servicoId}&data=${data}`
     )
       .then(r => r.json())
-      .then(d => setSlots(Array.isArray(d) ? d : []))
+      .then(d => setSlots(Array.isArray(d.slots) ? d.slots : []))
       .finally(() => setCarregando(false))
   }, [barbeiroId, servicoId, data, empresaId])
 

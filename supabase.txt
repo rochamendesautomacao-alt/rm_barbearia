@@ -1,2 +1,20 @@
 @Suporterm123789@
 Mr5e3pDmt9Ljbt0G
+
+
+Painel do operador (admin):
+
+
+https://rmbarbearia-nine.vercel.app/agenda
+Link para enviar ao cliente (substitua seu-slug pelo slug da barbearia):
+
+
+https://rmbarbearia-nine.vercel.app/seu-slug
+Para descobrir o slug exato, acesse o painel admin em /agenda, ou consulte o banco no Supabase:
+
+
+SELECT slug FROM empresas LIMIT 5;
+O slug é gerado automaticamente no cadastro a partir do nome da empresa (ex: "RM Barbearia" → rm-barbearia). O link completo ficaria:
+
+
+https://rmbarbearia-nine.vercel.app/rm-barbearia

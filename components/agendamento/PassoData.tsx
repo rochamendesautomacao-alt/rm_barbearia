@@ -3,6 +3,7 @@
 import { useState } from 'react'
 
 interface Props {
+  diasAtivos:   number[]   // dias da semana abertos (0=Dom..6=Sáb)
   onSelecionar: (data: string) => void
   onVoltar:     () => void
 }
@@ -13,7 +14,7 @@ const MESES = [
   'Julho','Agosto','Setembro','Outubro','Novembro','Dezembro',
 ]
 
-export default function PassoData({ onSelecionar, onVoltar }: Props) {
+export default function PassoData({ diasAtivos, onSelecionar, onVoltar }: Props) {
   const hoje = new Date()
   hoje.setHours(0, 0, 0, 0)
 
@@ -50,9 +51,10 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
     return d > limite
   }
 
-  function isFimDeSemana(dia: number) {
+  function isDiaFechado(dia: number) {
     const dow = new Date(ano, mes, dia).getDay()
-    return dow === 0 || dow === 6
+    // se diasAtivos foi fornecido, bloqueia dias não configurados; senão bloqueia só domingo
+    return diasAtivos.length > 0 ? !diasAtivos.includes(dow) : dow === 0
   }
 
   function toDataStr(dia: number) {
@@ -60,7 +62,7 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
   }
 
   function handleDia(dia: number) {
-    if (isDiaPassado(dia) || isFuturoLonge(dia) || isFimDeSemana(dia)) return
+    if (isDiaPassado(dia) || isFuturoLonge(dia) || isDiaFechado(dia)) return
     setDataSelecionada(toDataStr(dia))
   }
 
@@ -129,8 +131,8 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
           {Array.from({ length: diasNoMes }, (_, i) => i + 1).map(dia => {
             const passado    = isDiaPassado(dia)
             const futuroLong = isFuturoLonge(dia)
-            const fds        = isFimDeSemana(dia)
-            const desabilitado = passado || futuroLong || fds
+            const fechado     = isDiaFechado(dia)
+            const desabilitado = passado || futuroLong || fechado
             const dataStr = toDataStr(dia)
             const selecionado = dataSelecionada === dataStr
 
@@ -156,7 +158,7 @@ export default function PassoData({ onSelecionar, onVoltar }: Props) {
       </div>
 
       <p className="text-zinc-600 text-xs text-center">
-        Fins de semana e datas passadas indisponíveis
+        Apenas dias com horário configurado estão disponíveis
       </p>
 
       <button

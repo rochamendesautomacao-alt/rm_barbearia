@@ -22,7 +22,7 @@ export default async function PaginaBarbearia({ params }: Props) {
 
   const empresa = empresaData as any
 
-  const [{ data: servicos }, { data: barbeiros }] = await Promise.all([
+  const [{ data: servicos }, { data: barbeiros }, { data: horarios }] = await Promise.all([
     supabase
       .from('servicos')
       .select('*')
@@ -35,7 +35,16 @@ export default async function PaginaBarbearia({ params }: Props) {
       .eq('empresa_id', empresa.id)
       .eq('ativo', true)
       .order('nome'),
+    supabase
+      .from('horarios_funcionamento')
+      .select('dia_semana')
+      .eq('empresa_id', empresa.id)
+      .is('barbeiro_id', null)
+      .eq('ativo', true),
   ])
+
+  // dias da semana configurados como abertos (0=Dom, 6=Sáb)
+  const diasAtivos = (horarios ?? []).map((h: any) => Number(h.dia_semana))
 
   return (
     <div className="min-h-screen bg-zinc-950">
@@ -78,6 +87,7 @@ export default async function PaginaBarbearia({ params }: Props) {
           empresa={empresa}
           servicos={servicos ?? []}
           barbeiros={barbeiros ?? []}
+          diasAtivos={diasAtivos}
         />
       </main>
     </div>

@@ -32,9 +32,10 @@ interface Empresa {
 }
 
 interface Props {
-  empresa: Empresa
-  servicos: Servico[]
-  barbeiros: Barbeiro[]
+  empresa:    Empresa
+  servicos:   Servico[]
+  barbeiros:  Barbeiro[]
+  diasAtivos: number[]   // dias da semana com horário configurado (0=Dom..6=Sáb)
 }
 
 export interface EstadoAgendamento {
@@ -47,7 +48,7 @@ export interface EstadoAgendamento {
 
 const PASSOS = ['Serviço', 'Barbeiro', 'Data', 'Horário', 'Confirmar']
 
-export default function FluxoAgendamento({ empresa, servicos, barbeiros }: Props) {
+export default function FluxoAgendamento({ empresa, servicos, barbeiros, diasAtivos }: Props) {
   const router  = useRouter()
   const [passo, setPasso] = useState(0)
   const [estado, setEstado] = useState<EstadoAgendamento>({
@@ -174,7 +175,7 @@ export default function FluxoAgendamento({ empresa, servicos, barbeiros }: Props
           />
         )}
         {passo === 2 && (
-          <PassoData onSelecionar={selecionarData} onVoltar={voltar} />
+          <PassoData diasAtivos={diasAtivos} onSelecionar={selecionarData} onVoltar={voltar} />
         )}
         {passo === 3 && estado.servico && estado.barbeiro && estado.data && (
           <PassoHorario
