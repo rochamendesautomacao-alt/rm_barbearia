@@ -7,12 +7,13 @@ interface Barbeiro { id: string; nome: string }
 interface Servico  { id: string; nome: string; duracao_minutos: number; preco: number }
 
 interface Props {
-  empresaId: string
-  barbeiros: Barbeiro[]
-  servicos:  Servico[]
+  empresaId:  string
+  barbeiros:  Barbeiro[]
+  servicos:   Servico[]
+  diasAtivos: number[]
 }
 
-export default function AgendaClientWrapper({ empresaId, barbeiros, servicos }: Props) {
+export default function AgendaClientWrapper({ empresaId, barbeiros, servicos, diasAtivos }: Props) {
   const [showForm, setShowForm] = useState(false)
 
   function fecharForm() {
@@ -37,6 +38,7 @@ export default function AgendaClientWrapper({ empresaId, barbeiros, servicos }: 
             empresaId={empresaId}
             barbeiros={barbeiros}
             servicos={servicos}
+            diasAtivos={diasAtivos}
             onFinalizar={fecharForm}
           />
         </div>

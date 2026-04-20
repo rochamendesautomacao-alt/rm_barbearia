@@ -9,14 +9,30 @@ interface Servico  { id: string; nome: string; duracao_minutos: number; preco: n
 interface ClienteItem { id: string; nome: string; telefone: string }
 
 interface Props {
-  empresaId: string
-  barbeiros: Barbeiro[]
-  servicos:  Servico[]
+  empresaId:   string
+  barbeiros:   Barbeiro[]
+  servicos:    Servico[]
+  diasAtivos:  number[]
   onFinalizar: () => void
 }
 
-function hoje() {
-  return new Date().toISOString().split('T')[0]
+// Retorna a data de hoje no fuso de São Paulo (YYYY-MM-DD)
+function hojeEmSP(): string {
+  return new Date().toLocaleDateString('sv', { timeZone: 'America/Sao_Paulo' })
+}
+
+// Próximo dia com horário configurado a partir de hoje (inclusive)
+function proximoDiaUtil(diasAtivos: number[]): string {
+  if (diasAtivos.length === 0) return hojeEmSP()
+  const base = new Date(hojeEmSP() + 'T00:00:00')
+  for (let i = 0; i <= 14; i++) {
+    const d = new Date(base)
+    d.setDate(d.getDate() + i)
+    if (diasAtivos.includes(d.getDay())) {
+      return d.toLocaleDateString('sv')
+    }
+  }
+  return hojeEmSP()
 }
 
 function formatarTelefone(v: string) {
@@ -183,11 +199,11 @@ function BuscaCliente({
 }
 
 // ─── FormAgendamento principal ────────────────────────────────────────────────
-export default function FormAgendamento({ empresaId, barbeiros, servicos, onFinalizar }: Props) {
+export default function FormAgendamento({ empresaId, barbeiros, servicos, diasAtivos, onFinalizar }: Props) {
   const [clienteId,  setClienteId]  = useState('')
   const [barbeiroId, setBarbeiroId] = useState('')
   const [servicoId,  setServicoId]  = useState('')
-  const [data,       setData]       = useState(hoje())
+  const [data,       setData]       = useState(() => proximoDiaUtil(diasAtivos))
   const [slot,       setSlot]       = useState('')
   const [slots,      setSlots]      = useState<{ hora_inicio: string }[]>([])
   const [carregando, setCarregando] = useState(false)
@@ -287,7 +303,7 @@ export default function FormAgendamento({ empresaId, barbeiros, servicos, onFina
         <input
           type="date"
           value={data}
-          min={hoje()}
+          min={hojeEmSP()}
           onChange={e => setData(e.target.value)}
           required
           className={inputCls}

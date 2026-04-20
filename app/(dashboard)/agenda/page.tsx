@@ -35,7 +35,7 @@ export default async function AgendaPage({ searchParams }: Props) {
 
   const supabase = await createClient()
 
-  const [{ data: raw }, { data: barbeiros }, { data: servicos }] = await Promise.all([
+  const [{ data: raw }, { data: barbeiros }, { data: servicos }, { data: horarios }] = await Promise.all([
     supabase.from('vw_agenda_dia').select('*'),
     supabase
       .from('barbeiros')
@@ -47,7 +47,14 @@ export default async function AgendaPage({ searchParams }: Props) {
       .select('id, nome, duracao_minutos, preco')
       .eq('ativo', true)
       .order('nome'),
+    supabase
+      .from('horarios_funcionamento')
+      .select('dia_semana')
+      .is('barbeiro_id', null)
+      .eq('ativo', true),
   ])
+
+  const diasAtivos = (horarios ?? []).map((h: any) => Number(h.dia_semana))
 
   const lista = ((raw ?? []) as AgendamentoDia[]).filter(a => {
     const d = a.data_hora_inicio?.split('T')[0]
@@ -78,6 +85,7 @@ export default async function AgendaPage({ searchParams }: Props) {
         empresaId={usuario?.empresa_id ?? ''}
         barbeiros={barbeiros ?? []}
         servicos={servicos ?? []}
+        diasAtivos={diasAtivos}
       />
 
       <div className="grid grid-cols-2 gap-3">
