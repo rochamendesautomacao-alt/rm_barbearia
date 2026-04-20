@@ -1,10 +1,9 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
-import type { AgendamentoDia } from '@/types/database'
+import { createAdminClient } from '@/lib/supabase/admin'
 
 interface Props {
-  params:      Promise<{ slug: string }>
+  params:       Promise<{ slug: string }>
   searchParams: Promise<{ id?: string }>
 }
 
@@ -28,11 +27,29 @@ export default async function ConfirmacaoBPage({ params, searchParams }: Props) 
 
   if (!id) notFound()
 
-  const supabase = await createClient()
-  const { data: todos } = await supabase.from('vw_agenda_dia').select('*')
-  const agendamento = ((todos ?? []) as AgendamentoDia[]).find(a => a.id === id)
+  const admin = createAdminClient()
 
-  if (!agendamento) notFound()
+  const { data: ag } = await admin
+    .from('agendamentos')
+    .select('id, data_hora_inicio, data_hora_fim, preco_cobrado, status, barbeiro_id, servico_id')
+    .eq('id', id)
+    .single()
+
+  if (!ag) notFound()
+
+  const [{ data: servico }, { data: barbeiro }] = await Promise.all([
+    admin.from('servicos').select('nome, duracao_minutos').eq('id', ag.servico_id).single(),
+    admin.from('barbeiros').select('nome').eq('id', ag.barbeiro_id).single(),
+  ])
+
+  if (!servico || !barbeiro) notFound()
+
+  const agendamento = {
+    ...ag,
+    servico_nome:    servico.nome,
+    duracao_minutos: servico.duracao_minutos,
+    barbeiro_nome:   barbeiro.nome,
+  }
 
   return (
     <div className="min-h-screen bg-zinc-950 flex flex-col">
