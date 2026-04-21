@@ -23,6 +23,11 @@ function formatarDuracao(min: number) {
   return m > 0 ? `${h}h ${m}min` : `${h}h`
 }
 
+const inputCls = `w-full bg-zinc-800/80 border border-zinc-700 rounded-xl px-3 py-2.5
+  text-white placeholder-zinc-600 text-sm
+  focus:outline-none focus:ring-2 focus:ring-amber-500/60 focus:border-amber-500/50
+  transition-all duration-200`
+
 export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
   const [lista, setLista]       = useState(servicos)
   const [editando, setEditando] = useState<Servico | null>(null)
@@ -53,8 +58,9 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
       {!showForm && (
         <button
           onClick={() => { setEditando(null); setShowForm(true) }}
-          className="w-full py-3 border border-dashed border-zinc-700 hover:border-amber-500/50
-                     rounded-xl text-zinc-400 hover:text-amber-400 text-sm transition-colors"
+          className="w-full py-3.5 border border-dashed border-zinc-700/60 hover:border-amber-500/40
+                     rounded-2xl text-zinc-500 hover:text-amber-400 text-sm font-medium
+                     hover:bg-amber-500/5 transition-all duration-200"
         >
           + Adicionar serviço
         </button>
@@ -62,34 +68,32 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
 
       {/* Formulário */}
       {showForm && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 space-y-4">
-          <h3 className="text-white font-medium text-sm">
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg shadow-black/20 space-y-4">
+          <h3 className="text-white font-bold text-sm tracking-tight">
             {editando ? 'Editar serviço' : 'Novo serviço'}
           </h3>
 
           {erro && (
-            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-lg px-3 py-2">
+            <p className="text-red-400 text-sm bg-red-500/10 border border-red-500/20 rounded-xl px-3 py-2">
               {erro}
             </p>
           )}
 
           <form onSubmit={handleSubmit} className="space-y-4">
-            <div className="space-y-1">
-              <label className="text-sm text-zinc-300">Nome *</label>
+            <div className="space-y-1.5">
+              <label className="text-xs text-zinc-400 font-medium">Nome *</label>
               <input
                 name="nome"
                 required
                 defaultValue={editando?.nome}
                 placeholder="Ex: Corte masculino"
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5
-                           text-white placeholder-zinc-600 text-sm
-                           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className={inputCls}
               />
             </div>
 
             <div className="grid grid-cols-2 gap-3">
-              <div className="space-y-1">
-                <label className="text-sm text-zinc-300">Duração (min) *</label>
+              <div className="space-y-1.5">
+                <label className="text-xs text-zinc-400 font-medium">Duração (min) *</label>
                 <input
                   name="duracao_minutos"
                   type="number"
@@ -98,13 +102,11 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
                   max={480}
                   step={5}
                   defaultValue={editando?.duracao_minutos ?? 30}
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5
-                             text-white text-sm
-                             focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className={inputCls}
                 />
               </div>
-              <div className="space-y-1">
-                <label className="text-sm text-zinc-300">Preço (R$) *</label>
+              <div className="space-y-1.5">
+                <label className="text-xs text-zinc-400 font-medium">Preço (R$) *</label>
                 <input
                   name="preco"
                   type="number"
@@ -113,23 +115,19 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
                   step={0.01}
                   defaultValue={editando?.preco ?? ''}
                   placeholder="0,00"
-                  className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5
-                             text-white placeholder-zinc-600 text-sm
-                             focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                  className={inputCls}
                 />
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label className="text-sm text-zinc-300">Descrição</label>
+            <div className="space-y-1.5">
+              <label className="text-xs text-zinc-400 font-medium">Descrição</label>
               <textarea
                 name="descricao"
                 rows={2}
                 defaultValue={editando?.descricao ?? ''}
                 placeholder="Descrição opcional..."
-                className="w-full bg-zinc-800 border border-zinc-700 rounded-lg px-3 py-2.5
-                           text-white placeholder-zinc-600 text-sm resize-none
-                           focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                className={`${inputCls} resize-none`}
               />
             </div>
 
@@ -137,7 +135,7 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
               <button
                 type="button"
                 onClick={() => { setShowForm(false); setEditando(null) }}
-                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 rounded-lg text-sm transition-colors"
+                className="flex-1 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400 hover:text-white rounded-xl text-sm font-medium transition-all duration-200"
               >
                 Cancelar
               </button>
@@ -145,7 +143,7 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
                 type="submit"
                 disabled={loading}
                 className="flex-1 py-2.5 bg-amber-500 hover:bg-amber-400 disabled:opacity-50
-                           text-black font-semibold rounded-lg text-sm transition-colors"
+                           text-black font-bold rounded-xl text-sm transition-all duration-200 active:scale-[0.98]"
               >
                 {loading ? 'Salvando...' : editando ? 'Salvar' : 'Adicionar'}
               </button>
@@ -157,46 +155,50 @@ export default function ListaServicos({ servicos }: { servicos: Servico[] }) {
       {/* Lista */}
       <div className="space-y-2">
         {lista.length === 0 && !showForm && (
-          <p className="text-zinc-600 text-sm text-center py-8">
-            Nenhum serviço cadastrado ainda.
-          </p>
+          <div className="text-center py-12">
+            <p className="text-zinc-500 text-sm">Nenhum serviço cadastrado ainda.</p>
+            <p className="text-zinc-600 text-xs mt-1">Adicione o primeiro serviço acima.</p>
+          </div>
         )}
 
         {lista.map(s => (
           <div
             key={s.id}
             className={[
-              'bg-zinc-900 border border-zinc-800 rounded-xl p-4',
+              'bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4',
+              'transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/50',
               !s.ativo ? 'opacity-50' : '',
             ].join(' ')}
           >
             <div className="flex items-start justify-between gap-3">
               <div className="min-w-0 flex-1">
-                <p className="text-white font-medium text-sm">{s.nome}</p>
+                <p className="text-white font-bold text-sm">{s.nome}</p>
                 {s.descricao && (
                   <p className="text-zinc-500 text-xs mt-0.5 line-clamp-1">{s.descricao}</p>
                 )}
-                <div className="flex items-center gap-3 mt-1.5">
-                  <span className="text-amber-400 font-semibold text-sm">{formatarPreco(s.preco)}</span>
-                  <span className="text-zinc-500 text-xs">{formatarDuracao(s.duracao_minutos)}</span>
+                <div className="flex items-center gap-2.5 mt-2">
+                  <span className="text-amber-400 font-black text-sm">{formatarPreco(s.preco)}</span>
+                  <span className="bg-zinc-800 text-zinc-400 text-[11px] font-medium px-2 py-0.5 rounded-full">
+                    {formatarDuracao(s.duracao_minutos)}
+                  </span>
                 </div>
               </div>
 
               <div className="flex items-center gap-2 shrink-0">
                 <button
                   onClick={() => { setEditando(s); setShowForm(true) }}
-                  className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400
-                             hover:text-white rounded-lg text-xs transition-colors"
+                  className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400
+                             hover:text-white rounded-xl text-xs font-medium transition-all duration-200"
                 >
                   Editar
                 </button>
                 <button
                   onClick={() => handleToggle(s.id, s.ativo)}
                   className={[
-                    'px-2.5 py-1.5 rounded-lg text-xs transition-colors',
+                    'px-3 py-1.5 rounded-xl text-xs font-medium transition-all duration-200',
                     s.ativo
-                      ? 'bg-zinc-800 hover:bg-red-900/50 text-zinc-400 hover:text-red-400'
-                      : 'bg-green-900/30 text-green-500',
+                      ? 'bg-zinc-800 hover:bg-red-900/40 text-zinc-400 hover:text-red-400'
+                      : 'bg-green-900/30 hover:bg-green-900/50 text-green-500',
                   ].join(' ')}
                 >
                   {s.ativo ? 'Desativar' : 'Ativar'}

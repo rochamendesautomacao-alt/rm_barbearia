@@ -47,8 +47,8 @@ export default async function ClientesPage({ searchParams }: Props) {
   return (
     <div className="px-4 py-6 space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-white text-xl font-bold">Clientes</h1>
-        <p className="text-zinc-400 text-sm mt-0.5">{total} clientes cadastrados</p>
+        <h1 className="text-white text-2xl font-black tracking-tight">Clientes</h1>
+        <p className="text-zinc-500 text-sm mt-0.5">{total} clientes cadastrados</p>
       </div>
 
       {/* Busca */}
@@ -57,9 +57,10 @@ export default async function ClientesPage({ searchParams }: Props) {
           name="q"
           defaultValue={q}
           placeholder="Buscar por nome ou telefone..."
-          className="w-full bg-zinc-900 border border-zinc-800 rounded-xl px-4 py-3
+          className="w-full bg-zinc-900/80 border border-zinc-800 rounded-2xl px-4 py-3
                      text-white placeholder-zinc-600 text-sm
-                     focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent"
+                     focus:outline-none focus:ring-2 focus:ring-amber-500/60 focus:border-amber-500/50
+                     transition-all duration-200"
         />
       </form>
 
@@ -77,7 +78,7 @@ export default async function ClientesPage({ searchParams }: Props) {
             {pagina > 1 && (
               <a
                 href={`?${q ? `q=${encodeURIComponent(q)}&` : ''}pagina=${pagina - 1}`}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-xl font-medium transition-all duration-200"
               >
                 Anterior
               </a>
@@ -85,7 +86,7 @@ export default async function ClientesPage({ searchParams }: Props) {
             {pagina < totalPag && (
               <a
                 href={`?${q ? `q=${encodeURIComponent(q)}&` : ''}pagina=${pagina + 1}`}
-                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-lg transition-colors"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs rounded-xl font-medium transition-all duration-200"
               >
                 Próxima
               </a>

@@ -7,8 +7,8 @@ export default async function HorariosPage() {
   return (
     <div className="px-4 py-6 space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-white text-xl font-bold">Horários de Funcionamento</h1>
-        <p className="text-zinc-400 text-sm mt-0.5">
+        <h1 className="text-white text-2xl font-black tracking-tight">Horários de Funcionamento</h1>
+        <p className="text-zinc-500 text-sm mt-0.5">
           Defina os dias e horários em que a barbearia atende
         </p>
       </div>

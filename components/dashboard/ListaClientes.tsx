@@ -25,6 +25,11 @@ function formatarTelefone(v: string) {
   return v
 }
 
+const inputCls = `w-full bg-zinc-800/80 border border-zinc-700 rounded-xl px-4 py-3
+  text-white placeholder-zinc-600 text-sm
+  focus:outline-none focus:ring-2 focus:ring-amber-500/60 focus:border-amber-500/50
+  transition-all duration-200`
+
 function FormCliente({
   cliente,
   onFinalizar,
@@ -57,14 +62,10 @@ function FormCliente({
     }
   }
 
-  const inputCls = `w-full bg-zinc-800 border border-zinc-700 rounded-xl px-4 py-3
-    text-white placeholder-zinc-600 text-sm
-    focus:outline-none focus:ring-2 focus:ring-amber-500 focus:border-transparent`
-
   return (
     <form onSubmit={handleSubmit} className="space-y-3">
       <div>
-        <label className="text-xs text-zinc-400 mb-1 block">Nome *</label>
+        <label className="text-xs text-zinc-400 font-medium mb-1 block">Nome *</label>
         <input
           name="nome"
           defaultValue={cliente?.nome}
@@ -76,7 +77,7 @@ function FormCliente({
       </div>
 
       <div>
-        <label className="text-xs text-zinc-400 mb-1 block">Telefone *</label>
+        <label className="text-xs text-zinc-400 font-medium mb-1 block">Telefone *</label>
         <input
           name="telefone"
           value={telefone}
@@ -88,7 +89,7 @@ function FormCliente({
       </div>
 
       <div>
-        <label className="text-xs text-zinc-400 mb-1 block">
+        <label className="text-xs text-zinc-400 font-medium mb-1 block">
           E-mail <span className="text-zinc-600">(opcional)</span>
         </label>
         <input
@@ -101,7 +102,7 @@ function FormCliente({
       </div>
 
       <div>
-        <label className="text-xs text-zinc-400 mb-1 block">
+        <label className="text-xs text-zinc-400 font-medium mb-1 block">
           Observações <span className="text-zinc-600">(opcional)</span>
         </label>
         <textarea
@@ -120,8 +121,8 @@ function FormCliente({
           type="submit"
           disabled={enviando}
           className="flex-1 bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-700
-                     disabled:text-zinc-500 text-black font-semibold
-                     rounded-xl py-2.5 text-sm transition-colors"
+                     disabled:text-zinc-500 text-black font-bold
+                     rounded-xl py-2.5 text-sm transition-all duration-200 active:scale-[0.98]"
         >
           {enviando ? 'Salvando...' : cliente ? 'Salvar alterações' : 'Adicionar cliente'}
         </button>
@@ -130,7 +131,7 @@ function FormCliente({
           onClick={onFinalizar}
           disabled={enviando}
           className="px-4 py-2.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400
-                     hover:text-white rounded-xl text-sm transition-colors"
+                     hover:text-white rounded-xl text-sm font-medium transition-all duration-200"
         >
           Cancelar
         </button>
@@ -160,16 +161,17 @@ export default function ListaClientes({ clientes, empresaId }: Props) {
       {!showForm && (
         <button
           onClick={() => { setEditando(null); setShowForm(true) }}
-          className="w-full py-3 border border-dashed border-zinc-700 hover:border-amber-500/50
-                     rounded-xl text-zinc-400 hover:text-amber-400 text-sm transition-colors"
+          className="w-full py-3.5 border border-dashed border-zinc-700/60 hover:border-amber-500/40
+                     rounded-2xl text-zinc-500 hover:text-amber-400 text-sm font-medium
+                     hover:bg-amber-500/5 transition-all duration-200"
         >
           + Adicionar cliente
         </button>
       )}
 
       {showForm && (
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <h3 className="text-white font-medium text-sm mb-4">
+        <div className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-5 shadow-lg shadow-black/20">
+          <h3 className="text-white font-bold text-sm mb-4 tracking-tight">
             {editando ? 'Editar cliente' : 'Novo cliente'}
           </h3>
           <FormCliente cliente={editando ?? undefined} onFinalizar={fecharForm} />
@@ -178,37 +180,39 @@ export default function ListaClientes({ clientes, empresaId }: Props) {
 
       <div className="space-y-2">
         {lista.length === 0 && !showForm && (
-          <p className="text-zinc-600 text-sm text-center py-8">
-            Nenhum cliente cadastrado ainda.
-          </p>
+          <div className="text-center py-12">
+            <p className="text-zinc-500 text-sm">Nenhum cliente cadastrado ainda.</p>
+            <p className="text-zinc-600 text-xs mt-1">Adicione o primeiro cliente acima.</p>
+          </div>
         )}
 
         {lista.map(c => (
           <div
             key={c.id}
-            className="bg-zinc-900 border border-zinc-800 rounded-xl p-4 flex items-center gap-4"
+            className="bg-zinc-900/80 border border-zinc-800 rounded-2xl p-4 flex items-center gap-4
+                       transition-all duration-200 hover:border-zinc-700 hover:bg-zinc-800/50"
           >
-            <div className="w-10 h-10 rounded-full bg-zinc-800 flex items-center justify-center shrink-0">
-              <span className="text-zinc-400 font-semibold text-sm">
+            <div className="w-10 h-10 rounded-full bg-zinc-800 ring-1 ring-zinc-700 flex items-center justify-center shrink-0">
+              <span className="text-white font-bold text-sm">
                 {c.nome.charAt(0).toUpperCase()}
               </span>
             </div>
 
             <div className="flex-1 min-w-0">
-              <p className="text-white font-medium text-sm">{c.nome}</p>
+              <p className="text-white font-bold text-sm">{c.nome}</p>
               <p className="text-zinc-400 text-xs">{formatarTelefone(c.telefone)}</p>
               {c.email && <p className="text-zinc-600 text-xs truncate">{c.email}</p>}
             </div>
 
             <div className="flex items-center gap-3 shrink-0">
               <div className="text-right">
-                <p className="text-white text-sm font-medium">{c.visitas}</p>
-                <p className="text-zinc-600 text-xs">visitas</p>
+                <p className="text-white text-sm font-black">{c.visitas}</p>
+                <p className="text-zinc-600 text-[10px] uppercase tracking-widest">visitas</p>
               </div>
               <button
                 onClick={() => abrirEdicao(c)}
-                className="px-2.5 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400
-                           hover:text-white rounded-lg text-xs transition-colors"
+                className="px-3 py-1.5 bg-zinc-800 hover:bg-zinc-700 text-zinc-400
+                           hover:text-white rounded-xl text-xs font-medium transition-all duration-200"
               >
                 Editar
               </button>

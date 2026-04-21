@@ -16,14 +16,14 @@ export default async function ConfiguracoesPage() {
   return (
     <div className="px-4 py-6 space-y-8 max-w-2xl">
       <div>
-        <h1 className="text-white text-xl font-bold">Configurações</h1>
-        <p className="text-zinc-400 text-sm mt-0.5">Plano, assinatura e conta</p>
+        <h1 className="text-white text-2xl font-black tracking-tight">Configurações</h1>
+        <p className="text-zinc-500 text-sm mt-0.5">Plano, assinatura e conta</p>
       </div>
 
       {/* Uso atual do plano */}
       {status ? (
         <section className="space-y-3">
-          <h2 className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+          <h2 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">
             Uso atual
           </h2>
           <PainelPlano status={status} />
@@ -36,7 +36,7 @@ export default async function ConfiguracoesPage() {
 
       {/* Comparativo de planos */}
       <section className="space-y-3">
-        <h2 className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+        <h2 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">
           Planos disponíveis
         </h2>
         <CardsPlanos
@@ -47,7 +47,7 @@ export default async function ConfiguracoesPage() {
 
       {/* Info da empresa */}
       <section className="space-y-3">
-        <h2 className="text-zinc-400 text-xs font-medium uppercase tracking-wide">
+        <h2 className="text-[11px] font-black uppercase tracking-widest text-zinc-500">
           Sua empresa
         </h2>
         <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5 space-y-3">

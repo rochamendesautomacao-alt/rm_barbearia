@@ -77,8 +77,8 @@ export default async function AgendaPage({ searchParams }: Props) {
   return (
     <div className="px-4 py-6 space-y-5 max-w-2xl">
       <div>
-        <h1 className="text-white text-xl font-bold">Agenda</h1>
-        <p className="text-zinc-400 text-sm capitalize">{formatarDataExibicao(data)}</p>
+        <h1 className="text-white text-2xl font-black tracking-tight">Agenda</h1>
+        <p className="text-zinc-500 text-sm capitalize mt-0.5">{formatarDataExibicao(data)}</p>
       </div>
 
       <NavegacaoDia dataAtual={data} />
@@ -91,13 +91,13 @@ export default async function AgendaPage({ searchParams }: Props) {
       />
 
       <div className="grid grid-cols-2 gap-3">
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <p className="text-zinc-400 text-xs">Agendamentos</p>
-          <p className="text-white text-2xl font-bold mt-1">{totais.total}</p>
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-900/80 border border-zinc-800 rounded-2xl p-4 shadow-lg shadow-black/20">
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Agendamentos</p>
+          <p className="text-white text-2xl font-black mt-1.5">{totais.total}</p>
         </div>
-        <div className="bg-zinc-900 border border-zinc-800 rounded-xl p-4">
-          <p className="text-zinc-400 text-xs">Receita do dia</p>
-          <p className="text-amber-400 text-xl font-bold mt-1">{receita}</p>
+        <div className="bg-gradient-to-br from-zinc-900 to-zinc-900/80 border border-amber-500/10 rounded-2xl p-4 shadow-lg shadow-black/20">
+          <p className="text-[10px] uppercase tracking-widest text-zinc-500 font-medium">Receita do dia</p>
+          <p className="text-amber-400 text-xl font-black mt-1.5">{receita}</p>
         </div>
       </div>
 
@@ -107,11 +107,11 @@ export default async function AgendaPage({ searchParams }: Props) {
         </div>
       ) : (
         <div className="space-y-5">
-          {andamento.length > 0  && <Grupo titulo="Em andamento"        items={andamento} />}
-          {pendentes.length > 0  && <Grupo titulo="Pendentes"           items={pendentes} />}
-          {confirmados.length > 0 && <Grupo titulo="Confirmados"        items={confirmados} />}
-          {concluidos.length > 0 && <Grupo titulo="Concluídos"          items={concluidos} />}
-          {cancelados.length > 0 && <Grupo titulo="Cancelados / No-show" items={cancelados} />}
+          {andamento.length > 0   && <Grupo titulo="Em andamento"         items={andamento} />}
+          {pendentes.length > 0   && <Grupo titulo="Pendentes"            items={pendentes} />}
+          {confirmados.length > 0 && <Grupo titulo="Confirmados"          items={confirmados} />}
+          {concluidos.length > 0  && <Grupo titulo="Concluídos"           items={concluidos} />}
+          {cancelados.length > 0  && <Grupo titulo="Cancelados / No-show" items={cancelados} />}
         </div>
       )}
     </div>
@@ -121,8 +121,8 @@ export default async function AgendaPage({ searchParams }: Props) {
 function Grupo({ titulo, items }: { titulo: string; items: AgendamentoDia[] }) {
   return (
     <div className="space-y-2">
-      <h2 className="text-zinc-500 text-xs font-medium uppercase tracking-wide px-1">
-        {titulo} <span className="text-zinc-600">({items.length})</span>
+      <h2 className="text-[11px] font-black uppercase tracking-widest text-zinc-500 px-1">
+        {titulo} <span className="text-zinc-700 font-medium">({items.length})</span>
       </h2>
       {items.map(ag => (
         <CardAgendamento key={ag.id} agendamento={ag as any} />

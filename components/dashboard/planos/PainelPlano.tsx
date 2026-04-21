@@ -86,7 +86,7 @@ export default function PainelPlano({ status }: Props) {
 
       {/* Recursos incluídos */}
       <div className="bg-zinc-900 border border-zinc-800 rounded-2xl p-5">
-        <h3 className="text-zinc-400 text-xs font-medium uppercase tracking-wide mb-3">
+        <h3 className="text-[11px] font-black uppercase tracking-widest text-zinc-500 mb-3">
           Recursos do plano
         </h3>
         <ul className="space-y-2.5">
