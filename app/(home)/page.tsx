@@ -28,7 +28,6 @@ const CARDS = [
     href: '/agenda',
     label: 'Agenda',
     descricao: 'Agendamentos do dia',
-    cor: 'amber',
     iconBg: 'bg-amber-500/15',
     iconColor: 'text-amber-400',
     icon: (
@@ -43,7 +42,6 @@ const CARDS = [
     href: '/agenda?filtro=pendentes',
     label: 'Pendentes',
     descricao: 'Aprovações aguardando',
-    cor: 'rose',
     iconBg: 'bg-rose-500/15',
     iconColor: 'text-rose-400',
     icon: (
@@ -58,7 +56,6 @@ const CARDS = [
     href: '/barbeiros',
     label: 'Barbeiros',
     descricao: 'Gerencie sua equipe',
-    cor: 'blue',
     iconBg: 'bg-blue-500/15',
     iconColor: 'text-blue-400',
     icon: (
@@ -73,7 +70,6 @@ const CARDS = [
     href: '/servicos',
     label: 'Serviços',
     descricao: 'Cortes e tratamentos',
-    cor: 'purple',
     iconBg: 'bg-purple-500/15',
     iconColor: 'text-purple-400',
     icon: (
@@ -86,7 +82,6 @@ const CARDS = [
     href: '/horarios',
     label: 'Horários',
     descricao: 'Funcionamento e folgas',
-    cor: 'cyan',
     iconBg: 'bg-cyan-500/15',
     iconColor: 'text-cyan-400',
     icon: (
@@ -100,7 +95,6 @@ const CARDS = [
     href: '/clientes',
     label: 'Clientes',
     descricao: 'Histórico e cadastros',
-    cor: 'green',
     iconBg: 'bg-green-500/15',
     iconColor: 'text-green-400',
     icon: (
@@ -116,7 +110,6 @@ const CARDS = [
     href: '/relatorios',
     label: 'Relatórios',
     descricao: 'Faturamento e métricas',
-    cor: 'orange',
     iconBg: 'bg-orange-500/15',
     iconColor: 'text-orange-400',
     icon: (
@@ -131,7 +124,6 @@ const CARDS = [
     href: '/configuracoes',
     label: 'Configurações',
     descricao: 'Plano e preferências',
-    cor: 'zinc',
     iconBg: 'bg-zinc-700/60',
     iconColor: 'text-zinc-300',
     icon: (
@@ -144,10 +136,10 @@ const CARDS = [
 ]
 
 export default async function DashboardHome() {
-  const usuario = await getUsuarioComEmpresa()
+  const usuario  = await getUsuarioComEmpresa()
   const supabase = await createClient()
 
-  const dataHoje = hoje()
+  const dataHoje  = hoje()
   const inicioHoje = `${dataHoje}T00:00:00`
   const fimHoje    = `${dataHoje}T23:59:59`
 
@@ -159,7 +151,7 @@ export default async function DashboardHome() {
     .lte('data_hora_inicio', fimHoje)
     .not('status', 'in', '(cancelado,no_show)')
 
-  const totalHoje    = agendamentosHoje?.length ?? 0
+  const totalHoje     = agendamentosHoje?.length ?? 0
   const pendentesHoje = agendamentosHoje?.filter((a: any) => a.status === 'pendente').length ?? 0
 
   const nomeEmpresa = (usuario as any)?.empresas?.nome ?? 'Minha Barbearia'
@@ -167,7 +159,7 @@ export default async function DashboardHome() {
   const inicial     = nomeEmpresa.charAt(0).toUpperCase()
 
   return (
-    <div className="px-4 py-6 space-y-6 max-w-2xl">
+    <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto space-y-6">
 
       {/* ── Header ── */}
       <div className="flex items-start gap-4">
