@@ -43,16 +43,6 @@ const nextConfig: NextConfig = {
     ]
   },
 
-  // redireciona / para /login (a raiz não tem página)
-  async redirects() {
-    return [
-      {
-        source:      '/',
-        destination: '/login',
-        permanent:   false,
-      },
-    ]
-  },
 }
 
 export default nextConfig
