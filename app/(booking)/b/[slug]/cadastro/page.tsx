@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import FormCadastroCliente from '@/components/agendamento/FormCadastroCliente'
-import { cadastrarClienteB } from '@/app/actions/booking-publico'
+import { cadastrarClienteOtpB, verificarOtpB } from '@/app/actions/booking-publico'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -48,7 +48,11 @@ export default async function CadastroBPage({ params }: Props) {
           <p className="text-zinc-400 text-sm mt-1">Gerencie seus agendamentos em um só lugar</p>
         </div>
 
-        <FormCadastroCliente slug={slug} cadastrarAction={cadastrarClienteB} />
+        <FormCadastroCliente
+          slug={slug}
+          cadastrarAction={cadastrarClienteOtpB}
+          verificarAction={verificarOtpB}
+        />
 
         <p className="text-center text-zinc-500 text-sm mt-6">
           Já tem conta?{' '}

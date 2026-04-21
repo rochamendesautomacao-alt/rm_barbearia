@@ -2,7 +2,7 @@ import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import FormLoginCliente from '@/components/agendamento/FormLoginCliente'
-import { loginClienteB, loginClientePorTelefoneB } from '@/app/actions/booking-publico'
+import { solicitarOtpB, verificarOtpB } from '@/app/actions/booking-publico'
 
 interface Props {
   params: Promise<{ slug: string }>
@@ -50,8 +50,9 @@ export default async function EntrarBPage({ params }: Props) {
 
         <FormLoginCliente
           slug={slug}
-          loginAction={loginClienteB}
-          loginTelefoneAction={loginClientePorTelefoneB}
+          solicitarAction={solicitarOtpB}
+          verificarAction={verificarOtpB}
+          cadastroHref={`${base}/cadastro`}
         />
 
         <p className="text-center text-zinc-500 text-sm mt-6">

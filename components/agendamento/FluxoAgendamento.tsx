@@ -84,7 +84,7 @@ export default function FluxoAgendamento({
 
   function avancar() { setPasso(p => Math.min(p + 1, PASSOS.length - 1)) }
   function voltar()  {
-    if (isReagendar && passo === 2) return  // impede voltar para serviço/barbeiro pré-selecionados
+    if (isReagendar && passo === 2) { router.back(); return }
     setPasso(p => Math.max(p - 1, 0))
     setErroEnvio(null)
   }
