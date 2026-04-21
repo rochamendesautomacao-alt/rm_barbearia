@@ -82,7 +82,7 @@ export async function cadastrar(formData: FormData) {
     redirect(`/registro?erro=${encodeURIComponent(msg)}`)
   }
 
-  redirect('/agenda')
+  redirect('/')
 }
 
 // ------------------------------------------------------------

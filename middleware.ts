@@ -121,7 +121,7 @@ export async function middleware(request: NextRequest) {
   // ── 2. AUTH — redireciona se já autenticado ───────────────────────────────
   if (isRotaAuth(pathname) && user) {
     const url = request.nextUrl.clone()
-    url.pathname = '/agenda'
+    url.pathname = '/'
     return NextResponse.redirect(url)
   }
 
