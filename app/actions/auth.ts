@@ -15,8 +15,10 @@ export async function login(formData: FormData) {
   const { data, error } = await supabase.auth.signInWithPassword({ email, password: senha })
 
   if (error) {
-    // Mensagem genérica para não vazar se o e-mail existe ou não
-    redirect(`/login?erro=${encodeURIComponent('E-mail ou senha inválidos')}`)
+    const msg = error.message.toLowerCase().includes('email not confirmed')
+      ? 'Confirme seu e-mail antes de entrar. Verifique sua caixa de entrada.'
+      : 'E-mail ou senha inválidos'
+    redirect(`/login?erro=${encodeURIComponent(msg)}`)
   }
 
   // Sincroniza claims no JWT para deixar o middleware muito mais rápido
