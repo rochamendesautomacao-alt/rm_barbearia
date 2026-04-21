@@ -84,10 +84,10 @@ export default async function MeusAgendamentosPage({ params }: Props) {
           <h2 className="text-white text-xl font-bold">Meus agendamentos</h2>
           <Link
             href={`/${slug}`}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black font-semibold
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300 font-semibold
                        rounded-xl text-sm transition-colors"
           >
-            + Novo
+            Voltar
           </Link>
         </div>
 

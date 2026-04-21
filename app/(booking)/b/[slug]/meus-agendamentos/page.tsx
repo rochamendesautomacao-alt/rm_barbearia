@@ -1,6 +1,5 @@
 import { notFound, redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/server'
 import { getTenantPorSlug } from '@/lib/tenant'
 import { getClienteAutenticado, getAgendamentosCliente } from '@/app/actions/clientes'
 import { logoutClienteB } from '@/app/actions/booking-publico'
@@ -78,11 +77,11 @@ export default async function MeusAgendamentosBPage({ params }: Props) {
         <div className="flex items-center justify-between">
           <h2 className="text-white text-xl font-bold">Meus agendamentos</h2>
           <Link
-            href={`${base}/agendar`}
-            className="px-4 py-2 bg-amber-500 hover:bg-amber-400 text-black
+            href={`${base}`}
+            className="px-4 py-2 bg-zinc-800 hover:bg-zinc-700 text-zinc-300
                        font-semibold rounded-xl text-sm transition-colors"
           >
-            + Novo
+            Voltar
           </Link>
         </div>
 
