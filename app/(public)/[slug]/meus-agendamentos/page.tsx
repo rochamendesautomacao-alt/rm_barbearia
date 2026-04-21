@@ -122,7 +122,7 @@ export default async function MeusAgendamentosPage({ params }: Props) {
             <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wide">
               Histórico ({historico.length})
             </h3>
-            {historico.map(a => (
+            {historico.slice(0, 2).map(a => (
               <CardAgendamentoCliente key={a.id} agendamento={a} slug={slug} isFuturo={false} />
             ))}
           </div>

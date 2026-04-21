@@ -115,7 +115,7 @@ export default async function MeusAgendamentosBPage({ params }: Props) {
             <h3 className="text-zinc-500 text-xs font-medium uppercase tracking-wide">
               Histórico ({historico.length})
             </h3>
-            {historico.map(a => (
+            {historico.slice(0, 2).map(a => (
               <CardAgendamento key={a.id} agendamento={a} slug={slug} base={base} isFuturo={false} />
             ))}
           </div>
