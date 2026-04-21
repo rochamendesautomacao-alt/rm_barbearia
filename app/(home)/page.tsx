@@ -1,6 +1,7 @@
 import Link from 'next/link'
 import { getUsuarioComEmpresa } from '@/app/actions/auth'
 import { createClient } from '@/lib/supabase/server'
+import CopyLinkButton from '@/components/home/CopyLinkButton'
 
 function hoje() {
   return new Date().toISOString().split('T')[0]
@@ -157,6 +158,7 @@ export default async function DashboardHome() {
   const nomeEmpresa = (usuario as any)?.empresas?.nome ?? 'Minha Barbearia'
   const nomeUsuario = (usuario as any)?.nome ?? ''
   const inicial     = nomeEmpresa.charAt(0).toUpperCase()
+  const slug        = (usuario as any)?.empresas?.slug ?? ''
 
   return (
     <div className="min-h-screen px-4 py-8 max-w-2xl mx-auto space-y-6">
@@ -166,8 +168,11 @@ export default async function DashboardHome() {
         <div className="w-12 h-12 rounded-2xl bg-amber-500 flex items-center justify-center shrink-0 shadow-lg shadow-amber-500/30">
           <span className="text-black font-black text-lg">{inicial}</span>
         </div>
-        <div className="min-w-0">
-          <h1 className="text-white text-2xl font-black tracking-tight truncate">{nomeEmpresa}</h1>
+        <div className="min-w-0 flex-1">
+          <div className="flex items-start justify-between gap-3">
+            <h1 className="text-white text-2xl font-black tracking-tight truncate">{nomeEmpresa}</h1>
+            {slug && <CopyLinkButton slug={slug} />}
+          </div>
           <p className="text-zinc-400 text-sm mt-0.5">
             {saudacao()}, <span className="text-amber-400 font-semibold">{nomeUsuario}</span>
           </p>
