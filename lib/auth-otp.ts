@@ -57,10 +57,10 @@ export async function _verificarOtpImpl(
   basePath: string,
 ): Promise<{ erro: string }> {
   const email = (formData.get('email') as string)?.trim()
-  const token = (formData.get('token') as string)?.replace(/\D/g, '').slice(0, 6)
+  const token = (formData.get('token') as string)?.replace(/\D/g, '').slice(0, 8)
   const novo  = formData.get('novo') === 'true'
 
-  if (!email || !token || token.length !== 6) {
+  if (!email || !token || token.length < 6) {
     return { erro: 'Código inválido' }
   }
 

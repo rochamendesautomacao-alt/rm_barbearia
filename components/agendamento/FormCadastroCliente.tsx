@@ -134,20 +134,20 @@ export default function FormCadastroCliente({
               name="token"
               type="text"
               inputMode="numeric"
-              pattern="[0-9]{6}"
-              maxLength={6}
+              pattern="[0-9]{6,8}"
+              maxLength={8}
               value={token}
-              onChange={e => setToken(e.target.value.replace(/\D/g, '').slice(0, 6))}
+              onChange={e => setToken(e.target.value.replace(/\D/g, '').slice(0, 8))}
               autoFocus
               required
-              placeholder="000000"
+              placeholder="00000000"
               className={`${inputCls} text-center text-2xl tracking-[0.5em] font-mono`}
             />
           </div>
 
           <button
             type="submit"
-            disabled={enviando || token.length !== 6}
+            disabled={enviando || token.length < 6}
             className="w-full bg-amber-500 hover:bg-amber-400 disabled:bg-zinc-800
                        disabled:text-zinc-600 text-black font-bold
                        rounded-xl py-4 text-sm transition-all active:scale-[0.98] shadow-lg shadow-amber-500/10"
