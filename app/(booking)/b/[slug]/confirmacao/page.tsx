@@ -1,6 +1,7 @@
 import { notFound } from 'next/navigation'
 import Link from 'next/link'
 import { createAdminClient } from '@/lib/supabase/admin'
+import BotaoNavegar from '@/components/ui/BotaoNavegar'
 
 interface Props {
   params:       Promise<{ slug: string }>
@@ -117,13 +118,13 @@ export default async function ConfirmacaoBPage({ params, searchParams }: Props) 
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Link
+          <BotaoNavegar
             href={`${base}/meus-agendamentos`}
             className="block text-center bg-zinc-900 hover:bg-zinc-800 border border-zinc-700
                        text-white rounded-xl py-3 text-sm font-medium transition-colors"
           >
             Meus agendamentos
-          </Link>
+          </BotaoNavegar>
           <Link
             href={`${base}/agendar`}
             className="block text-center bg-amber-500 hover:bg-amber-400
