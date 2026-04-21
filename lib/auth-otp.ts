@@ -17,14 +17,17 @@ export async function _solicitarOtpImpl(
   if (!empresa) return { erro: 'Barbearia não encontrada' }
 
   let emailDestino: string
+  let nomeCliente: string | undefined
+  let criarUsuario = false
+
+  const admin = createAdminClient()
 
   if (modo === 'telefone') {
     if (!telefone || telefone.length < 10) return { erro: 'Telefone inválido' }
 
-    const admin = createAdminClient()
     const { data: cliente } = await admin
       .from('clientes')
-      .select('email')
+      .select('email, nome, auth_user_id')
       .eq('telefone', telefone)
       .eq('empresa_id', empresa.id)
       .single()
@@ -33,15 +36,33 @@ export async function _solicitarOtpImpl(
       return { erro: 'Número não cadastrado. Deseja se cadastrar?', naoEncontrado: true }
     }
     emailDestino = cliente.email
+    nomeCliente  = cliente.nome
+    criarUsuario = !cliente.auth_user_id
   } else {
     if (!emailRaw || !emailRaw.includes('@')) return { erro: 'E-mail inválido' }
+
+    const { data: cliente } = await admin
+      .from('clientes')
+      .select('nome, auth_user_id')
+      .eq('email', emailRaw)
+      .eq('empresa_id', empresa.id)
+      .single()
+
+    if (!cliente) {
+      return { erro: 'E-mail não encontrado. Verifique ou crie uma conta.', naoEncontrado: true }
+    }
     emailDestino = emailRaw
+    nomeCliente  = cliente.nome
+    criarUsuario = !cliente.auth_user_id
   }
 
   const supabase = await createClient()
   const { error } = await supabase.auth.signInWithOtp({
     email: emailDestino,
-    options: { shouldCreateUser: false },
+    options: {
+      shouldCreateUser: criarUsuario,
+      ...(criarUsuario && nomeCliente ? { data: { nome: nomeCliente, tipo: 'cliente' } } : {}),
+    },
   })
 
   if (error) {
@@ -58,7 +79,6 @@ export async function _verificarOtpImpl(
 ): Promise<{ erro: string }> {
   const email = (formData.get('email') as string)?.trim()
   const token = (formData.get('token') as string)?.replace(/\D/g, '').slice(0, 8)
-  const novo  = formData.get('novo') === 'true'
 
   if (!email || !token || token.length < 6) {
     return { erro: 'Código inválido' }
@@ -82,17 +102,15 @@ export async function _verificarOtpImpl(
     return { erro: 'Use o painel administrativo para acessar sua conta.' }
   }
 
-  if (novo) {
-    const empresa = await getTenantPorSlug(slug)
-    if (empresa) {
-      const admin = createAdminClient()
-      await admin
-        .from('clientes')
-        .update({ auth_user_id: user.id })
-        .eq('email', email)
-        .eq('empresa_id', empresa.id)
-        .is('auth_user_id', null)
-    }
+  const empresa = await getTenantPorSlug(slug)
+  if (empresa) {
+    const admin = createAdminClient()
+    await admin
+      .from('clientes')
+      .update({ auth_user_id: user.id })
+      .eq('email', email)
+      .eq('empresa_id', empresa.id)
+      .is('auth_user_id', null)
   }
 
   redirect(`${basePath}/meus-agendamentos`)
