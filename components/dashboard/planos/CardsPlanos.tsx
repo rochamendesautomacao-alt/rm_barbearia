@@ -16,7 +16,6 @@ interface Props {
 
 const RECURSOS_LABELS: Record<string, string> = {
   relatorios:         'Relatórios financeiros',
-  whatsapp:           'Notificações WhatsApp',
   personalizar_cores: 'Personalizar cores',
   exportar_csv:       'Exportar dados CSV',
 }
@@ -49,14 +48,9 @@ export default function CardsPlanos({ planos, planoAtual }: Props) {
                 )}
               </div>
               <p className="text-2xl font-bold text-white mt-2">
-                {plano.preco_mensal === 0
-                  ? <span className="text-zinc-400">Grátis</span>
-                  : <>
-                      <span className="text-sm font-normal text-zinc-400">R$</span>
-                      {' '}{plano.preco_mensal.toFixed(2).replace('.', ',')}
-                      <span className="text-sm font-normal text-zinc-400">/mês</span>
-                    </>
-                }
+                <span className="text-sm font-normal text-zinc-400">R$</span>
+                {' '}{plano.preco_mensal.toFixed(2).replace('.', ',')}
+                <span className="text-sm font-normal text-zinc-400">/mês</span>
               </p>
             </div>
 
@@ -99,7 +93,7 @@ export default function CardsPlanos({ planos, planoAtual }: Props) {
                            text-black font-semibold rounded-xl text-sm transition-colors"
                 onClick={() => alert('Integração de pagamento em breve (Stripe)')}
               >
-                {plano.preco_mensal === 0 ? 'Mudar para Starter' : `Fazer upgrade`}
+                Fazer upgrade
               </button>
             )}
             {atual && (

@@ -20,7 +20,6 @@ function BarraProgresso({ pct, critico }: { pct: number; critico: boolean }) {
 
 const RECURSOS_LABELS: Record<string, string> = {
   relatorios:          'Relatórios financeiros',
-  whatsapp:            'Notificações WhatsApp',
   personalizar_cores:  'Personalizar cores',
   exportar_csv:        'Exportar dados CSV',
 }
